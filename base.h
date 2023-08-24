@@ -19,36 +19,16 @@
 #define ARCHITECTURE_64BIT 1
 #endif
 
-#ifndef __cplusplus // C
-#define static_assert(VAR, MSG) _Static_assert((VAR), MSG)
-#define alignof(TYPE) _Alignof(TYPE)
-#ifndef true
-#define true 1
-#endif
-#ifndef false
-#define false 0
-#endif
-#endif // C
-
-#ifndef NULL
-#define NULL (void *)0
-#endif
-
 #if COMPILER_MSVC
-
 #endif // COMPILER_MSVC
 
 #if COMPILER_GNU
-
-#endif // COMPILER_GNU
-
-#if COMPILER_CLANG
-typedef   signed char        int8
-typedef   signed short       int16
-typedef   signed int         int32
-typedef unsigned char        uint8
-typedef unsigned short       uint16
-typedef unsigned int         uint32
+typedef   signed char        int8;
+typedef   signed short       int16;
+typedef   signed int         int32;
+typedef unsigned char        uint8;
+typedef unsigned short       uint16;
+typedef unsigned int         uint32;
 #define INT8_MIN             0x80
 #define INT16_MIN            0x8000
 #define INT32_MIN            0x80000000
@@ -62,14 +42,22 @@ typedef unsigned int         uint32
 #define UINT16_MAX           0xFFFF
 #define UINT32_MAX           0xFFFFFFFF
 #if ARCHITECTURE_32BIT
+typedef int32                isize;
+typedef uint32               usize;
+typedef int32                intptr;
+typedef uint32               uintptr;
 #define SIZE_MAX             INT32_MAX
 #define SIZE_MIN             INT32_MiN
 #define USIZE_MAX            UINT32_MAX
 #define USIZE_MIN            UINT32_MIN
 #endif // ARCHITECTURE_32BIT
 #if ARCHITECTURE_64BIT
-typedef   signed long long   int64
-typedef unsigned long long   uint64
+typedef   signed long long   int64;
+typedef unsigned long long   uint64;
+typedef int64                isize;
+typedef uint64               usize;
+typedef int64                intptr;
+typedef uint64               uintptr;
 #define INT64_MAX            0x7FFFFFFFFFFFFFFF
 #define INT64_MIN            0x8000000000000000
 #define UINT64_MIN           0
@@ -79,7 +67,56 @@ typedef unsigned long long   uint64
 #define USIZE_MAX            UINT64_MAX
 #define USIZE_MIN            UINT64_MIN
 #endif // ARCHITECTURE_64BIT
+#if DEBUG
+#define DEBUG_BREAK __builtin_trap
+#else
+#define DEBUG_BREAK
+#endif // DEBUG
+#endif // COMPILER_GNU
+
+#if COMPILER_CLANG
 #endif // COMPILER_CLANG
+
+typedef uint8                byte;
+
+#ifndef __cplusplus // C
+#define static_assert(VAR, MSG) _Static_assert((VAR), MSG)
+#define alignof(TYPE) _Alignof(TYPE)
+typedef uint8                bool;
+typedef uint32               bool32;
+#ifndef true
+#define true 1
+#endif
+#ifndef false
+#define false 0
+#endif
+#ifndef va_start
+typedef __builtin_va_list va_list;
+#define va_start __builtin_va_start
+#define va_arg   __builtin_va_arg
+#define va_end   __builtin_va_end
+#endif
+#endif // C
+
+#ifndef NULL
+#define NULL (void *)0
+#endif
+
+#define FUNCTION   static
+#define PERSIST    static
+#define GLOBAL     static
+#define INLINE     inline
+
+#ifdef DEBUG
+#define ASSERT(COND)          if (COND) {} else { DEBUG_BREAK(); } (void)(0)
+#define ASSERT_MSG(COND, ...) if (COND) {} else { DEBUG_BREAK(); } (void)(0)
+#else
+#define ASSERT(COND)          (void)(0)
+#define ASSERT_MSG(COND, ...) (void)(0)
+#endif // DEBUG
+#define ASSERT_FAIL(...) ASSERT_MSG(false, __VA_ARGS__)
+#define UNREACHABLE() ASSERT_FAIL("Unreachable code path!")
+#define NOT_IMPLEMENTED() ASSERT_FAIL("This code path is not implemented yet!")
 
 #define ARRAY_COUNT(ARRAY) (sizeof(ARRAY) / sizeof(ARRAY[0]))
 #define STRINGIFY_(X) #X
