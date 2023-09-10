@@ -13,13 +13,36 @@
 
 // Detect the 32-bit or 64-bit architecture
 #if defined(__arm__) || defined(__i386__)
-#define ARCHITECTURE_32BIT 1
+#define ARCH_32BIT 1
 #endif
 #if defined(__aarch64__) || defined(__x86_64__)
-#define ARCHITECTURE_64BIT 1
+#define ARCH_64BIT 1
 #endif
 
 #if COMPILER_MSVC
+typedef          __int8  int8;
+typedef          __int16 int16;
+typedef          __int32 int32;
+typedef          __int64 int64;
+typedef unsigned __int8  uint8;
+typedef unsigned __int16 uint16;
+typedef unsigned __int32 uint32;
+typedef unsigned __int64 uint64;
+typedef float            float32;
+typedef double           float64;
+
+#if DEBUG
+#define DEBUG_BREAK __debugbreak
+#else
+#define DEBUG_BREAK
+#endif // DEBUG
+
+#define FORCE_INLINE __forceinline
+#define DLL_EXPORT __declspec(dllexport)
+#define DEBUG_CYCLE_COUNT __rdtsc
+
+#define RELEASE_COM(PTR) do { if ((PTR)) { (PTR)->Release(); } (PTR) = NULL; } while(0)
+
 #endif // COMPILER_MSVC
 
 #if COMPILER_GNU
@@ -29,6 +52,7 @@ typedef   signed int         int32;
 typedef unsigned char        uint8;
 typedef unsigned short       uint16;
 typedef unsigned int         uint32;
+
 #define INT8_MIN             0x80
 #define INT16_MIN            0x8000
 #define INT32_MIN            0x80000000
@@ -41,7 +65,23 @@ typedef unsigned int         uint32;
 #define UINT8_MAX            0xFF
 #define UINT16_MAX           0xFFFF
 #define UINT32_MAX           0xFFFFFFFF
-#if ARCHITECTURE_32BIT
+
+#if ARCH_64BIT
+typedef   signed long long   int64;
+typedef unsigned long long   uint64;
+#endif // ARCH_64BIT
+
+#if DEBUG
+#define DEBUG_BREAK __builtin_trap
+#else
+#define DEBUG_BREAK
+#endif // DEBUG
+#endif // COMPILER_GNU
+
+#if COMPILER_CLANG
+#endif // COMPILER_CLANG
+
+#if ARCH_32BIT
 typedef int32                isize;
 typedef uint32               usize;
 typedef int32                intptr;
@@ -50,8 +90,9 @@ typedef uint32               uintptr;
 #define SIZE_MIN             INT32_MiN
 #define USIZE_MAX            UINT32_MAX
 #define USIZE_MIN            UINT32_MIN
-#endif // ARCHITECTURE_32BIT
-#if ARCHITECTURE_64BIT
+#endif // ARCH_32BIT
+
+#if ARCH_64BIT
 typedef   signed long long   int64;
 typedef unsigned long long   uint64;
 typedef int64                isize;
@@ -66,24 +107,16 @@ typedef uint64               uintptr;
 #define SIZE_MIN             INT64_MiN
 #define USIZE_MAX            UINT64_MAX
 #define USIZE_MIN            UINT64_MIN
-#endif // ARCHITECTURE_64BIT
-#if DEBUG
-#define DEBUG_BREAK __builtin_trap
-#else
-#define DEBUG_BREAK
-#endif // DEBUG
-#endif // COMPILER_GNU
+#endif // ARCH_64BIT
 
-#if COMPILER_CLANG
-#endif // COMPILER_CLANG
 
 typedef uint8                byte;
+typedef uint32               bool32;
 
 #ifndef __cplusplus // C
 #define static_assert(VAR, MSG) _Static_assert((VAR), MSG)
 #define alignof(TYPE) _Alignof(TYPE)
 typedef uint8                bool;
-typedef uint32               bool32;
 #ifndef true
 #define true 1
 #endif
@@ -99,8 +132,10 @@ typedef __builtin_va_list va_list;
 #endif // C
 
 #ifndef NULL
-#define NULL (void *)0
+#define NULL 0
 #endif
+
+#define EPSILON    1e-5f
 
 #define FUNCTION   static
 #define PERSIST    static
@@ -127,9 +162,11 @@ typedef __builtin_va_list va_list;
 #define MACRO_OVERLOAD_2(_1, _2, NAME, ...) NAME
 #define MACRO_OVERLOAD_3(_1, _2, _3, NAME, ...) NAME
 #define MACRO_OVERLOAD_4(_1, _2, _3, _4, NAME, ...) NAME
-#define KILOBYTES(N) (1024 * N)
-#define MEGABYTES(N) (1024 * KILOBYTES(N))
-#define GIGABYTES(N) (1024 * MEGABYTES(N))
+#define KILOBYTES(N) (1024ull * (N))
+#define MEGABYTES(N) (1024ull * KILOBYTES(N))
+#define GIGABYTES(N) (1024ull * MEGABYTES(N))
+#define TERABYTES(N) (1024ull * GIGABYTES(N))
+#define TOGGLE(X) (X) = !(X)
 
 
 #endif // BASE_HPP
