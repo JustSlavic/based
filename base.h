@@ -1,5 +1,5 @@
-#ifndef BASE_HPP
-#define BASE_HPP
+#ifndef BASED__BASE_HPP
+#define BASED__BASE_HPP
 
 #ifdef _MSC_VER
 #define COMPILER_MSVC 1
@@ -169,4 +169,4 @@ typedef __builtin_va_list va_list;
 #define TOGGLE(X) (X) = !(X)
 
 
-#endif // BASE_HPP
+#endif // BASED__BASE_HPP
