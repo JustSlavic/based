@@ -11,6 +11,18 @@ The elements of this geometry are:
 This geometry is called G301 because there are 3 elements that square to 1: e1, e2, e3
 and one element that squares to 0: e4.
 
+The matrix4 struct represents the usual matrix in projective geometry, where
+multiplication by vector is expected from the right (vec = mat * vec).
+
+Therefore the usual form of this matrix and vectors are:
+    | a  b  c tx |   | x |   | x' + tx |
+    | d  e  f ty | * | y | = | y' + ty |
+    | g  h  i tz |   | z |   | z' + tz |
+    | 0  0  0  1 |   | 1 |   |    1    |
+where
+    x' = ax + by + cz
+    y' = dx + ey + fz
+    z' = gx + hy + iz
 */
 
 #ifndef BASED__PROJECTIVE_GEOMETRY_HPP
@@ -62,16 +74,6 @@ struct matrix4
         vector4 row[4];
         float32 e[4][4];
     };
-
-    static matrix4 identity()
-    {
-        matrix4 result = {};
-        result._11 = 1.f;
-        result._22 = 1.f;
-        result._33 = 1.f;
-        result._44 = 1.f;
-        return result;
-    }
 };
 
 typedef vector4 point;
@@ -238,34 +240,36 @@ FORCE_INLINE matrix4& operator *= (matrix4& a, matrix4 const & b)
     return a;
 }
 
-FORCE_INLINE void scale_x(matrix4 & m, float32 sx) { m._11 *= sx; m._21 *= sx; m._31 *= sx; m._41 *= sx; }
-FORCE_INLINE void scale_y(matrix4 & m, float32 sy) { m._12 *= sy; m._22 *= sy; m._32 *= sy; m._42 *= sy; }
-FORCE_INLINE void scale_z(matrix4 & m, float32 sz) { m._13 *= sz; m._23 *= sz; m._33 *= sz; m._43 *= sz; }
-FORCE_INLINE void scale(matrix4 & m, vector3 s)
+FORCE_INLINE matrix4 matrix4__identity()
 {
-    m._11 *= s.x; m._12 *= s.y; m._13 *= s.z;
-    m._21 *= s.x; m._22 *= s.y; m._23 *= s.z;
-    m._31 *= s.x; m._32 *= s.y; m._33 *= s.z;
-    m._41 *= s.x; m._42 *= s.y; m._43 *= s.z;
+    matrix4 m = {};
+    m._11 = m._22 = m._33 = m._44 = 1.f;
+    return m;
 }
-FORCE_INLINE matrix4 scaled_x(float32 sx, matrix4 m) { scale_x(m, sx); return m; }
-FORCE_INLINE matrix4 scaled_y(float32 sy, matrix4 m) { scale_y(m, sy); return m; }
-FORCE_INLINE matrix4 scaled_z(float32 sz, matrix4 m) { scale_z(m, sz); return m; }
-FORCE_INLINE matrix4 scaled(vector3 s, matrix4 m) { scale(m, s); return m; }
-
-FORCE_INLINE void translate_x(matrix4 & m, float32 tx) { m._41 += tx; }
-FORCE_INLINE void translate_y(matrix4 & m, float32 ty) { m._42 += ty; }
-FORCE_INLINE void translate_z(matrix4 & m, float32 tz) { m._43 += tz; }
-FORCE_INLINE void translate(matrix4 & m, vector3 t)
+FORCE_INLINE matrix4 matrix4__scale_x(float32 sx) { matrix4 m = matrix4__identity(); m._11 = sx; return m; }
+FORCE_INLINE matrix4 matrix4__scale_y(float32 sy) { matrix4 m = matrix4__identity(); m._22 = sy; return m; }
+FORCE_INLINE matrix4 matrix4__scale_z(float32 sz) { matrix4 m = matrix4__identity(); m._33 = sz; return m; }
+FORCE_INLINE matrix4 matrix4__scale(float32 sx, float32 sy, float32 sz)
 {
-    m._41 += t.x;
-    m._42 += t.y;
-    m._43 += t.z;
+    matrix4 m = matrix4__identity();
+    m._11 = sx;
+    m._22 = sy;
+    m._33 = sz;
+    return m;
 }
-FORCE_INLINE matrix4 translated_x(float32 tx, matrix4 m) { translate_x(m, tx); return m; }
-FORCE_INLINE matrix4 translated_y(float32 ty, matrix4 m) { translate_y(m, ty); return m; }
-FORCE_INLINE matrix4 translated_z(float32 tz, matrix4 m) { translate_z(m, tz); return m; }
-FORCE_INLINE matrix4 translated(vector3 t, matrix4 m) { translate(m, t); return m; }
+FORCE_INLINE matrix4 matrix4__scale(vector3 s) { return matrix4__scale(s.x, s.y, s.z); }
+FORCE_INLINE matrix4 matrix4__translate_x(float32 tx) { matrix4 m = matrix4__identity(); m._14 = tx; return m; }
+FORCE_INLINE matrix4 matrix4__translate_y(float32 ty) { matrix4 m = matrix4__identity(); m._24 = ty; return m; }
+FORCE_INLINE matrix4 matrix4__translate_z(float32 tz) { matrix4 m = matrix4__identity(); m._34 = tz; return m; }
+FORCE_INLINE matrix4 matrix4__translate(float32 tx, float32 ty, float32 tz)
+{
+    matrix4 m = matrix4__identity();
+    m._14 = tx;
+    m._24 = ty;
+    m._34 = tz;
+    return m;
+}
+FORCE_INLINE matrix4 matrix4__translate(vector3 t) { return matrix4__translate(t.x, t.y, t.z); }
 
 // Line containing points P and Q
 line join(point p, point q)
