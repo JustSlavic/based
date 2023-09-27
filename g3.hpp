@@ -35,16 +35,17 @@ struct quaternion
         // y, j -> rotation in zx plane
         // Each of those unit elements correspond to the imaginary
         // unit in the plane, they operate upon.
-        struct { float32 _0, _12, _23, _31; };
-        struct { float32 w, z, x, y; };
-        struct { float32 r, k, i, j; };
+        struct { float32 _0, _23, _31, _12; };
+        struct { float32 w, x, y, z; };
+        struct { float32 w; vector3 vector; };
+        struct { float32 r, i, j, k; };
         float32 e[4];
     };
 };
 
-#define XY quaternion{ 0.f, 1.f, 0.f, 0.f }
-#define YZ quaternion{ 0.f, 0.f, 1.f, 0.f }
-#define ZX quaternion{ 0.f, 0.f, 0.f, 1.f }
+#define YZ quaternion{ 0.f, 1.f, 0.f, 0.f }
+#define ZX quaternion{ 0.f, 0.f, 1.f, 0.f }
+#define XY quaternion{ 0.f, 0.f, 0.f, 1.f }
 
 struct matrix3
 {
@@ -134,11 +135,97 @@ FORCE_INLINE vector3 normalized(vector3 a)
 FORCE_INLINE quaternion operator * (vector3 a, vector3 b)
 {
     quaternion r;
-    r._0 = (a._1 * b._1) + (a._2 * b._2) + (a._3 * b._3);
+    r._0  = (a._1 * b._1) + (a._2 * b._2) + (a._3 * b._3);
     r._12 = (a._1 * b._2) - (a._2 * b._1);
     r._23 = (a._2 * b._3) - (a._3 * b._2);
     r._31 = (a._3 * b._1) - (a._1 * b._3);
     return r;
+}
+
+FORCE_INLINE quaternion & operator += (quaternion & a, quaternion b) { a._0 += b._0; a._12 += b._12; a._23 += b._23; a._31 += b._31; return a; }
+FORCE_INLINE quaternion & operator -= (quaternion & a, quaternion b) { a._0 -= b._0; a._12 -= b._12; a._23 -= b._23; a._31 -= b._31; return a; }
+FORCE_INLINE quaternion & operator *= (quaternion & a, float32 c) { a._0 *= c; a._12 *= c; a._23 *= c; a._31 *= c; return a; }
+FORCE_INLINE quaternion & operator /= (quaternion & a, float32 c) { a._0 /= c; a._12 /= c; a._23 /= c; a._31 /= c; return a; }
+
+FORCE_INLINE quaternion operator + (quaternion a, quaternion b) { quaternion r; r._0 = a._0 + b._0; r._12 = a._12 + b._12; r._23 = a._23 + b._23; r._31 = a._31 + b._31; return r; }
+FORCE_INLINE quaternion operator - (quaternion a, quaternion b) { quaternion r; r._0 = a._0 - b._0; r._12 = a._12 - b._12; r._23 = a._23 - b._23; r._31 = a._31 - b._31; return r; }
+FORCE_INLINE quaternion operator * (quaternion q, float32 c) { quaternion r; r._0 = q._0 * c; r._12 = q._12 * c; r._23 = q._23 * c; r._31 = q._31 * c; return r; }
+FORCE_INLINE quaternion operator * (float32 c, quaternion q) { quaternion r; r._0 = c * q._0; r._12 = c * q._12; r._23 = c * q._23; r._31 = c * q._31; return r; }
+FORCE_INLINE quaternion operator / (quaternion q, float32 c) { quaternion r; r._0 = q._0 / c; r._12 = q._12 / c; r._23 = q._23 / c; r._31 = q._31 / c; return r; }
+
+FORCE_INLINE quaternion operator * (quaternion a, quaternion b)
+{
+    quaternion r;
+    r._0  = a._0*b._0  - a._12*b._12 - a._23*b._23 - a._31*b._31;
+    r._12 = a._0*b._12 + a._12*b._0  - a._23*b._31 + a._31*b._23;
+    r._23 = a._0*b._23 + a._12*b._31 + a._23*b._0  - a._31*b._12;
+    r._31 = a._0*b._31 - a._12*b._23 + a._23*b._12 + a._31*b._0;
+    return r;
+}
+
+FORCE_INLINE void conjugate(quaternion & q)
+{
+    q._12 = -q._12;
+    q._23 = -q._23;
+    q._31 = -q._31;
+}
+
+FORCE_INLINE quaternion conjugated(quaternion q)
+{
+    conjugate(q);
+    return q;
+}
+
+FORCE_INLINE float32 squared_norm(quaternion q)
+{
+    float32 result = q._0*q._0 + q._12*q._12 + q._23*q._23 + q._31*q._31;
+    return result;
+}
+
+FORCE_INLINE float32 norm(quaternion q)
+{
+    float32 result = math::square_root(squared_norm(q));
+    return result;
+}
+
+FORCE_INLINE void normalize(quaternion & q)
+{
+    float32 n = norm(q);
+    if (!math::near_zero(n))
+    {
+        q /= norm(q);
+    }
+}
+
+FORCE_INLINE quaternion normalized(quaternion q)
+{
+    normalize(q);
+    return q;
+}
+
+quaternion inverse(quaternion q)
+{
+    quaternion result = conjugated(q) / squared_norm(q);
+    return result;
+}
+
+vector3 rotate_by_unit_quaternion(quaternion q, vector3 v)
+{
+    quaternion qv;
+    qv.w = 0.f;
+    qv.vector = v;
+    quaternion r = q * qv * conjugated(q);
+    return r.vector;
+}
+
+vector3 rotate_by_quaternion(quaternion q, vector3 v)
+{
+    quaternion qv;
+    qv.w = 0.f;
+    qv.vector = v;
+    normalize(q);
+    quaternion r = q * qv * conjugated(q);
+    return r.vector;
 }
 
 FORCE_INLINE float32 *get_data(matrix3 & a) { return &a._11; }
