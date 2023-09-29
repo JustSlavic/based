@@ -37,7 +37,7 @@ struct quaternion
         // unit in the plane, they operate upon.
         struct { float32 _0, _23, _31, _12; };
         struct { float32 w, x, y, z; };
-        struct { float32 w; vector3 vector; };
+        struct { float32 w_; vector3 vector; };
         struct { float32 r, i, j, k; };
         float32 e[4];
     };

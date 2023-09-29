@@ -52,6 +52,12 @@ typedef   signed int         int32;
 typedef unsigned char        uint8;
 typedef unsigned short       uint16;
 typedef unsigned int         uint32;
+typedef float                float32;
+typedef double               float64;
+
+#define FORCE_INLINE         __attribute__((always_inline)) inline
+// #define DLL_EXPORT           __attribute__((dllexport))
+#define DLL_EXPORT           extern
 
 #define INT8_MIN             0x80
 #define INT16_MIN            0x8000
