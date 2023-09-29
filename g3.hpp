@@ -228,6 +228,42 @@ vector3 rotate_by_quaternion(quaternion q, vector3 v)
     return r.vector;
 }
 
+matrix3 to_matrix3(quaternion q)
+{
+    auto s = length(q);
+
+    matrix3 result;
+
+    result._11 = 1.f - 2.f * s * (q.j * q.j + q.k * q.k);
+    result._12 =       2.f * s * (q.i * q.j - q.k * q.r);
+    result._13 =       2.f * s * (q.i * q.k + q.j * q.r);
+
+    result._21 =       2.f * s * (q.i * q.j + q.k * q.r);
+    result._22 = 1.f - 2.f * s * (q.i * q.i + q.k * q.k);
+    result._23 =       2.f * s * (q.j * q.k - q.i * q.r);
+
+    result._31 =       2.f * s * (q.i * q.k - q.j * q.r);
+    result._32 =       2.f * s * (q.j * q.k + q.i * q.r);
+    result._33 = 1.f - 2.f * s * (q.i * q.i + q.j * q.j);
+
+    return result;
+}
+
+matrix4 to_matrix4(quaternion q)
+{
+    auto m3 = to_matrix3(q);
+
+    matrix4 result;
+    result._1.xyz = m3._1;
+    result._14 = 0.f;
+    result._2.xyz = m3._2;
+    result._24 = 0.f;
+    result._3.xyz = m3._3;
+    result._34 = 0.f;
+    result._4 = V4(0, 0, 0, 1);
+    return result;
+}
+
 FORCE_INLINE float32 *get_data(matrix3 & a) { return &a._11; }
 FORCE_INLINE float32 const *get_data(matrix3 const & a) { return &a._11; }
 
