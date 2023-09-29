@@ -322,19 +322,19 @@ FORCE_INLINE matrix3 operator * (matrix3 a, matrix3 b)
     return result;
 }
 
-FORCE_INLINE vector3& operator *= (vector3& v, matrix3 const& m)
+FORCE_INLINE vector3 & operator *= (vector3 & v, matrix3 const & m)
 {
     v = v * m;
     return v;
 }
 
-FORCE_INLINE matrix3& operator *= (matrix3& a, matrix3 const & b)
+FORCE_INLINE matrix3 & operator *= (matrix3 & a, matrix3 const & b)
 {
     a = a * b;
     return a;
 }
 
-FORCE_INLINE void transpose(matrix3& m)
+FORCE_INLINE void transpose(matrix3 & m)
 {
     float32 tmp;
     tmp = m._12; m._12 = m._21; m._21 = tmp;
@@ -348,7 +348,7 @@ FORCE_INLINE matrix3 transposed(matrix3 m)
     return m;
 }
 
-FORCE_INLINE float32 determinant(matrix3 const& m)
+FORCE_INLINE float32 determinant(matrix3 const & m)
 {
     float32 result = m._11 * (m._22 * m._33 - m._23 * m._32)
                    - m._12 * (m._21 * m._33 - m._23 * m._31)
@@ -356,7 +356,7 @@ FORCE_INLINE float32 determinant(matrix3 const& m)
     return result;
 }
 
-FORCE_INLINE matrix3 adjoint(matrix3 const& m)
+FORCE_INLINE matrix3 adjoint(matrix3 const & m)
 {
     matrix3 result;
 
@@ -375,7 +375,7 @@ FORCE_INLINE matrix3 adjoint(matrix3 const& m)
     return result;
 }
 
-FORCE_INLINE matrix3 inverse(matrix3 const& m)
+FORCE_INLINE matrix3 inverse(matrix3 const & m)
 {
     matrix3 result = {};
 
