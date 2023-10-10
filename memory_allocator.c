@@ -16,7 +16,7 @@
 //
 
 
-#define MINIMAL_MEMORY_BLOCK_SIZE MEGABYTES(1)
+#define MINIMAL_MEMORY_PAGE_SIZE MEGABYTES(1)
 
 
 typedef enum memory_allocator__type
@@ -31,7 +31,7 @@ typedef enum memory_allocator__type
 
 typedef struct memory_allocator__arena
 {
-    enum memory_allocator__type type;
+    memory_allocator__type type;
     memory_allocator parent;
 
     byte *memory;
@@ -42,28 +42,41 @@ typedef struct memory_allocator__arena
 
 memory_allocator memory_allocator__create_arena_from_memory_block(memory_block block)
 {
-    memory_block block_for_allocator = memory__advance_block(&block, sizeof(memory_allocator__arena));
-
-    memory_allocator__arena *arena = NULL;
-    if (block_for_allocator.size == sizeof(memory_allocator__arena))
+    memory_allocator result = NULL;
+    if (block.size >= MINIMAL_MEMORY_PAGE_SIZE)
     {
-        arena = (memory_allocator__arena *) block_for_allocator.memory;
+        usize padding = memory__get_padding(block.memory, alignof(memory_allocator__arena));
+        byte *memory_ = block.memory + padding;
 
+        memory_allocator__arena *arena = (memory_allocator__arena *) memory_;
         arena->type = MEMORY_ALLOCATOR_ARENA;
         arena->parent = NULL;
-        arena->memory = block.memory;
-        arena->size = block.size;
+        arena->memory = memory_ + sizeof(memory_allocator__arena);
+        arena->size = block.size - padding - sizeof(memory_allocator__arena);
         arena->used = 0;
-    }
 
-    return (memory_allocator) arena;
+        result = (memory_allocator) arena;
+    }
+    return result;
 }
 
 
-memory_allocator memory_allocator__create_arena(memory_allocator parent, usize size)
+memory_allocator memory_allocator__create_arena(memory_allocator parent, usize requested_arena_size)
 {
-    memory_block block = ALLOCATE_BUFFER_(parent, size + sizeof(memory_allocator__arena));
-    memory_allocator result = memory_allocator__create_arena_from_memory_block(block);
+    memory_allocator result = NULL;
+
+    memory_block arena_memory = ALLOCATE_BUFFER_ALIGNED_(parent, requested_arena_size + sizeof(memory_allocator__arena), alignof(memory_allocator__arena));
+    if (arena_memory.memory != NULL)
+    {
+        memory_allocator__arena *arena = (memory_allocator__arena *) arena_memory.memory;
+        arena->type = MEMORY_ALLOCATOR_ARENA;
+        arena->parent = parent;
+        arena->memory = arena_memory.memory + sizeof(memory_allocator__arena);
+        arena->size = arena_memory.size - sizeof(memory_allocator__arena);
+        arena->used = 0;
+
+        result = (memory_allocator) arena;
+    }
     return result;
 }
 
