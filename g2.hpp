@@ -101,6 +101,9 @@ FORCE_INLINE complex operator * (vector2 a, vector2 b) {
     return r;
 }
 
+FORCE_INLINE complex to_complex(vector2 v) { complex r; r.re = v.x; r.im = v.y; return r; }
+FORCE_INLINE vector2 to_vector2(complex a) { vector2 r; r.x = a.re; r.y = a.im; return r; }
+
 FORCE_INLINE void conjugate(complex & a) { a.im = -a.im; }
 FORCE_INLINE complex conjugated(complex a) { conjugate(a); return a; }
 
