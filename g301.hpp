@@ -76,48 +76,6 @@ struct matrix4
     };
 };
 
-typedef vector4 point;
-
-struct line
-{
-    union
-    {
-        struct { float32 _41, _42, _43, _23, _31, _12; };
-        struct { float32 vx, vy, vz, mx, my, mz; };
-        struct { vector3 weight; vector3 bulk; };
-    };
-};
-
-struct plane
-{
-    union
-    {
-        struct { float32 _423, _431, _412, _321; };
-        struct { float32 x, y, z, w; };
-        struct { vector3 weight; float32 bulk; };
-    };
-};
-
-struct motor
-{
-    union
-    {
-        struct { float32 _41, _42, _43, _1234, _23, _31, _12, _0; };
-        struct { float32 rx, ry, rz, rw, ux, uy, uz, uw; };
-        struct { vector3 weight; vector3 bulk; };
-    };
-};
-
-struct flector
-{
-    union
-    {
-        struct { float32 _1, _2, _3, _321, _4, _423, _431, _412; };
-        struct { float32 sx, sy, sz, sw, hx, hy, hz, hw; };
-        struct { vector3 bulk; vector3 weight; };
-    };
-};
-
 
 FORCE_INLINE float32 *get_data(vector4 & a) { return &a._1; }
 FORCE_INLINE float32 const *get_data(vector4 const & a) { return &a._1; }
@@ -271,88 +229,147 @@ FORCE_INLINE matrix4 matrix4__translate(float32 tx, float32 ty, float32 tz)
 }
 FORCE_INLINE matrix4 matrix4__translate(vector3 t) { return matrix4__translate(t.x, t.y, t.z); }
 
-// Line containing points P and Q
-line join(point p, point q)
+FORCE_INLINE matrix4 matrix4__rotate_x(float32 rx)
 {
-    line r;
-    r._41 = (q.x * p.w - p.x * q.w);
-    r._42 = (q.y * p.w - p.y * q.w);
-    r._43 = (q.z * p.w - p.z * q.w);
-    r._23 = (p.y * q.z - p.z * q.y);
-    r._31 = (p.z * q.x - p.x * q.z);
-    r._12 = (p.x * q.y - p.y * q.x);
-    return r;
+    matrix4 m = matrix4__identity();
+    float32 c = math::cos(rx);
+    float32 s = math::sin(rx);
+    m._22 = c; m._23 = -s;
+    m._32 = s; m._33 =  c;
+    return m;
 }
+FORCE_INLINE matrix4 matrix4__rotate_y(float32 ry)
+{
+    matrix4 m = matrix4__identity();
+    float32 c = math::cos(ry);
+    float32 s = math::sin(ry);
+    m._11 = c; m._13 = -s;
+    m._31 = s; m._33 =  c;
+    return m;
+}
+FORCE_INLINE matrix4 matrix4__rotate_z(float32 rz)
+{
+    matrix4 m = matrix4__identity();
+    float32 c = math::cos(rz);
+    float32 s = math::sin(rz);
+    m._11 = c; m._12 = -s;
+    m._21 = s; m._22 =  c;
+    return m;
+}
+
+
+FORCE_INLINE matrix4 to_matrix4(quaternion q)
+{
+    auto s = norm(q);
+
+    matrix4 result;
+
+    result._11 = 1.f - 2.f * s * (q.j * q.j + q.k * q.k);
+    result._12 =       2.f * s * (q.i * q.j - q.k * q.r);
+    result._13 =       2.f * s * (q.i * q.k + q.j * q.r);
+    result._14 = 0.f;
+
+    result._21 =       2.f * s * (q.i * q.j + q.k * q.r);
+    result._22 = 1.f - 2.f * s * (q.i * q.i + q.k * q.k);
+    result._23 =       2.f * s * (q.j * q.k - q.i * q.r);
+    result._24 = 0.f;
+
+    result._31 =       2.f * s * (q.i * q.k - q.j * q.r);
+    result._32 =       2.f * s * (q.j * q.k + q.i * q.r);
+    result._33 = 1.f - 2.f * s * (q.i * q.i + q.j * q.j);
+    result._34 = 0.f;
+
+    result._41 = 0.f;
+    result._42 = 0.f;
+    result._43 = 0.f;
+    result._44 = 1.f;
+
+    return result;
+}
+
+
+// Line containing points P and Q
+// line join(point p, point q)
+// {
+//     line r;
+//     r._41 = (q.x * p.w - p.x * q.w);
+//     r._42 = (q.y * p.w - p.y * q.w);
+//     r._43 = (q.z * p.w - p.z * q.w);
+//     r._23 = (p.y * q.z - p.z * q.y);
+//     r._31 = (p.z * q.x - p.x * q.z);
+//     r._12 = (p.x * q.y - p.y * q.x);
+//     return r;
+// }
 
 // Plane containing line L and point P
-plane join(line l, point p)
-{
-    plane r;
-    r._423 =  (l.vy * p.z - l.vz * p.y + l.mx * p.w);
-    r._431 =  (l.vz * p.x - l.vx * p.z + l.my * p.w);
-    r._412 =  (l.vx * p.y - l.vy * p.x + l.mz * p.w);
-    r._321 = -(l.mx * p.x + l.my * p.y + l.mz * p.z);
-    return r;
-}
+// plane join(line l, point p)
+// {
+//     plane r;
+//     r._423 =  (l.vy * p.z - l.vz * p.y + l.mx * p.w);
+//     r._431 =  (l.vz * p.x - l.vx * p.z + l.my * p.w);
+//     r._412 =  (l.vx * p.y - l.vy * p.x + l.mz * p.w);
+//     r._321 = -(l.mx * p.x + l.my * p.y + l.mz * p.z);
+//     return r;
+// }
 
 // Line where two planes f and g intersect
-line meet(plane f, plane g)
-{
-    line r;
-    r._41 = (f.z * g.y - f.y * g.z);
-    r._42 = (f.x * g.z - f.z * g.x);
-    r._43 = (f.y * g.x - f.x * g.y);
-    r._23 = (f.x * g.w - g.x * f.w);
-    r._31 = (f.y * g.w - g.y * f.w);
-    r._12 = (f.z * g.w - g.z * f.w);
-    return r;
-}
+// line meet(plane f, plane g)
+// {
+//     line r;
+//     r._41 = (f.z * g.y - f.y * g.z);
+//     r._42 = (f.x * g.z - f.z * g.x);
+//     r._43 = (f.y * g.x - f.x * g.y);
+//     r._23 = (f.x * g.w - g.x * f.w);
+//     r._31 = (f.y * g.w - g.y * f.w);
+//     r._12 = (f.z * g.w - g.z * f.w);
+//     return r;
+// }
 
 // Point where line L intersects plane f
-point meet(line l, plane f)
-{
-    point r;
-    r._1 =  (l.my * f.z - l.mz * f.y + l.vx * f.w);
-    r._2 =  (l.mz * f.x - l.mx * f.z + l.vy * f.w);
-    r._3 =  (l.mx * f.y - l.my * f.x + l.vz * f.w);
-    r._4 = -(l.vx * f.x + l.vy * f.y + l.vz * f.z);
-    return r;
-}
+// point meet(line l, plane f)
+// {
+//     point r;
+//     r._1 =  (l.my * f.z - l.mz * f.y + l.vx * f.w);
+//     r._2 =  (l.mz * f.x - l.mx * f.z + l.vy * f.w);
+//     r._3 =  (l.mx * f.y - l.my * f.x + l.vz * f.w);
+//     r._4 = -(l.vx * f.x + l.vy * f.y + l.vz * f.z);
+//     return r;
+// }
 
 // Line perpendicular to a plane f and passing through point P
-line get_line_from_plane_point(plane f, point p)
-{
-    line r;
-    r._41 = -f.x * p.w;
-    r._42 = -f.y * p.w;
-    r._43 = -f.z * p.w;
-    r._23 = (f.y * p.z - f.z * p.y);
-    r._31 = (f.z * p.x - f.x * p.z);
-    r._12 = (f.x * p.y - f.y * p.x);
-    return r;
-}
+// line get_line_from_plane_point(plane f, point p)
+// {
+//     line r;
+//     r._41 = -f.x * p.w;
+//     r._42 = -f.y * p.w;
+//     r._43 = -f.z * p.w;
+//     r._23 = (f.y * p.z - f.z * p.y);
+//     r._31 = (f.z * p.x - f.x * p.z);
+//     r._12 = (f.x * p.y - f.y * p.x);
+//     return r;
+// }
 
 // Plane perpendicular to line L and containing point P
-plane get_plane_from_line_point(line L, point P)
-{
-    plane r;
-    r._423 = -L.vx * P.w;
-    r._431 = -L.vy * P.w;
-    r._412 = -L.vz * P.w;
-    r._321 = (L.vx * P.x + L.vy * P.y + L.vz * P.z);
-    return r;
-}
+// plane get_plane_from_line_point(line L, point P)
+// {
+//     plane r;
+//     r._423 = -L.vx * P.w;
+//     r._431 = -L.vy * P.w;
+//     r._412 = -L.vz * P.w;
+//     r._321 = (L.vx * P.x + L.vy * P.y + L.vz * P.z);
+//     return r;
+// }
 
 // Plane perpendicular to plane f and containing line L
-plane get_plane_from_plane_line(plane f, line L)
-{
-    plane r;
-    r._423 =  (L.vy * f.z - L.vz * f.y);
-    r._431 =  (L.vz * f.x - L.vx * f.z);
-    r._412 =  (L.vx * f.y - L.vy * f.x);
-    r._321 = -(L.mx * f.x + L.my * f.y + L.mz * f.z);
-    return r;
-}
+// plane get_plane_from_plane_line(plane f, line L)
+// {
+//     plane r;
+//     r._423 =  (L.vy * f.z - L.vz * f.y);
+//     r._431 =  (L.vz * f.x - L.vx * f.z);
+//     r._412 =  (L.vx * f.y - L.vy * f.x);
+//     r._321 = -(L.mx * f.x + L.my * f.y + L.mz * f.z);
+//     return r;
+// }
 
 // Application of motors
 

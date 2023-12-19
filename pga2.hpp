@@ -1,7 +1,7 @@
 // Projective geometric algebra in 2D
 
-#ifndef BASED__PGA201_HPP
-#define BASED__PGA201_HPP
+#ifndef BASED__PGA2_HPP
+#define BASED__PGA2_HPP
 
 #include "base.h"
 #include <g2.hpp>
@@ -99,13 +99,19 @@ point dual(line l)
     return result;
 }
 
-point get_point(motor m)
+vector2 to_vector2(point p)
+{
+    vector2 result = p.vector;
+    return result;
+}
+
+point to_point(motor m)
 {
     point result = m.point;
     return result;
 }
 
-line get_line(flector f)
+line to_line(flector f)
 {
     line result = f.line;
     return result;
@@ -119,6 +125,15 @@ line operator - (line l1)
     result.a = -l1.a;
     result.b = -l1.b;
     result.c = -l1.c;
+    return result;
+}
+
+line operator + (line l, vector2 v)
+{
+    line result;
+    result.a = l.a;
+    result.b = l.b;
+    result.c = l.c - l.a * v.x - l.b * v.y;
     return result;
 }
 
@@ -307,4 +322,4 @@ motor conjugated(motor m)
 } // namespace pga2
 
 
-#endif // BASED__PGA201_HPP
+#endif // BASED__PGA2_HPP

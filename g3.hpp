@@ -24,6 +24,16 @@ struct vector3
 
 #define V3(...) MACRO_EXPAND(MACRO_OVERLOAD_3(__VA_ARGS__, V3_3, V3_2, V3_1)(__VA_ARGS__))
 
+struct bivector3
+{
+    union
+    {
+        struct { float32 yz, zx, xy; };
+        struct { float32 _23, _31, _12; };
+        float32 e[4];
+    };
+};
+
 struct quaternion
 {
     union
@@ -37,15 +47,15 @@ struct quaternion
         // unit in the plane, they operate upon.
         struct { float32 _0, _23, _31, _12; };
         struct { float32 w, x, y, z; };
-        struct { float32 w_; vector3 vector; };
+        struct { float32 w_; bivector3 bv; };
         struct { float32 r, i, j, k; };
         float32 e[4];
     };
 };
 
-#define YZ quaternion{ 0.f, 1.f, 0.f, 0.f }
-#define ZX quaternion{ 0.f, 0.f, 1.f, 0.f }
-#define XY quaternion{ 0.f, 0.f, 0.f, 1.f }
+#define YZ bivector{ 1.f, 0.f, 0.f }
+#define ZX bivector{ 0.f, 1.f, 0.f }
+#define XY bivector{ 0.f, 0.f, 1.f }
 
 struct matrix3
 {
@@ -108,6 +118,15 @@ FORCE_INLINE vector3 cross(vector3 a, vector3 b)
     return result;
 }
 
+FORCE_INLINE bivector3 outer(vector3 a, vector3 b)
+{
+    bivector3 result;
+    result.yz = a.y * b.z - a.z * b.y;
+    result.zx = a.z * b.x - a.x * b.z;
+    result.xy = a.x * b.y - a.y * b.x;
+    return result;
+}
+
 FORCE_INLINE float32 length_squared(vector3 a)
 {
     float32 result = inner(a, a);
@@ -120,6 +139,11 @@ FORCE_INLINE float32 length(vector3 a)
     return result;
 }
 
+FORCE_INLINE float32 norm(vector3 a)
+{
+    return length(a);
+}
+
 FORCE_INLINE void normalize(vector3 &a)
 {
     float32 n = length(a);
@@ -130,6 +154,30 @@ FORCE_INLINE vector3 normalized(vector3 a)
 {
     normalize(a);
     return a;
+}
+
+FORCE_INLINE vector3 bisector(vector3 a, vector3 b)
+{
+    vector3 result = norm(b)*a + norm(a)*b;
+    return result;
+}
+
+FORCE_INLINE bivector3 to_bivector3(vector3 a)
+{
+    bivector3 result;
+    result.yz = a.x;
+    result.zx = a.y;
+    result.xy = a.z;
+    return result;
+}
+
+FORCE_INLINE vector3 to_vector3(bivector3 a)
+{
+    vector3 result;
+    result.x = a.yz;
+    result.y = a.zx;
+    result.z = a.xy;
+    return result;
 }
 
 FORCE_INLINE quaternion operator * (vector3 a, vector3 b)
@@ -213,24 +261,24 @@ vector3 rotate_by_unit_quaternion(quaternion q, vector3 v)
 {
     quaternion qv;
     qv.w = 0.f;
-    qv.vector = v;
+    qv.bv = to_bivector3(v);
     quaternion r = q * qv * conjugated(q);
-    return r.vector;
+    return to_vector3(r.bv);
 }
 
 vector3 rotate_by_quaternion(quaternion q, vector3 v)
 {
     quaternion qv;
     qv.w = 0.f;
-    qv.vector = v;
+    qv.bv = to_bivector3(v);
     normalize(q);
     quaternion r = q * qv * conjugated(q);
-    return r.vector;
+    return to_vector3(r.bv);
 }
 
 matrix3 to_matrix3(quaternion q)
 {
-    auto s = length(q);
+    auto s = norm(q);
 
     matrix3 result;
 
@@ -249,20 +297,6 @@ matrix3 to_matrix3(quaternion q)
     return result;
 }
 
-matrix4 to_matrix4(quaternion q)
-{
-    auto m3 = to_matrix3(q);
-
-    matrix4 result;
-    result._1.xyz = m3._1;
-    result._14 = 0.f;
-    result._2.xyz = m3._2;
-    result._24 = 0.f;
-    result._3.xyz = m3._3;
-    result._34 = 0.f;
-    result._4 = V4(0, 0, 0, 1);
-    return result;
-}
 
 FORCE_INLINE float32 *get_data(matrix3 & a) { return &a._11; }
 FORCE_INLINE float32 const *get_data(matrix3 const & a) { return &a._11; }
