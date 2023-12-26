@@ -59,6 +59,7 @@ typedef double               float64;
 // #define DLL_EXPORT           __attribute__((dllexport))
 #define DLL_EXPORT           extern
 
+#ifndef INT8_MIN
 #define INT8_MIN             0x80
 #define INT16_MIN            0x8000
 #define INT32_MIN            0x80000000
@@ -71,6 +72,7 @@ typedef double               float64;
 #define UINT8_MAX            0xFF
 #define UINT16_MAX           0xFFFF
 #define UINT32_MAX           0xFFFFFFFF
+#endif
 
 #if ARCH_64BIT
 typedef   signed long long   int64;
@@ -105,6 +107,7 @@ typedef int64                isize;
 typedef uint64               usize;
 typedef int64                intptr;
 typedef uint64               uintptr;
+#ifndef INT64_MAX
 #define INT64_MAX            0x7FFFFFFFFFFFFFFF
 #define INT64_MIN            0x8000000000000000
 #define UINT64_MIN           0
@@ -113,6 +116,7 @@ typedef uint64               uintptr;
 #define SIZE_MIN             INT64_MiN
 #define USIZE_MAX            UINT64_MAX
 #define USIZE_MIN            UINT64_MIN
+#endif
 #endif // ARCH_64BIT
 
 
