@@ -1,6 +1,7 @@
 #ifndef BASED__INTEGER_H
 #define BASED__INTEGER_H
 
+#include <base.h>
 
 
 int16 int16__change_endianness(int16 n)

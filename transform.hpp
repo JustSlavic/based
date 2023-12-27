@@ -2,6 +2,8 @@
 #define BASED__TRANSFORM_HPP
 
 #include "base.h"
+#include "vector3.hpp"
+#include "matrix3.hpp"
 
 
 struct transform
@@ -32,16 +34,28 @@ struct transform
             vector3 _1, _2, _3, _4;
         };
         float32 e[4][3];
-        vector3 s[4];
     };
-};
 
-FORCE_INLINE transform transform__identity()
-{
-    transform tm = {};
-    tm._11 = tm._22 = tm._33 = 1.f;
-    return tm;
-}
+    FORCE_INLINE static transform identity () { transform tm = {}; tm._11 = tm._22 = tm._33 = 1.f; return tm; }
+
+    FORCE_INLINE static transform scale_x (float32 sx) { transform tm = identity(); tm._11 = sx; return tm; }
+    FORCE_INLINE static transform scale_y (float32 sy) { transform tm = identity(); tm._22 = sy; return tm; }
+    FORCE_INLINE static transform scale_z (float32 sz) { transform tm = identity(); tm._33 = sz; return tm; }
+    FORCE_INLINE static transform scale   (float32 sx, float32 sy, float32 sz) { transform tm = identity(); tm._11 = sx; tm._22 = sy; tm._33 = sz; return tm; }
+    FORCE_INLINE static transform scale   (vector3 s)  { return scale(s.x, s.y, s.z); }
+    FORCE_INLINE static transform scale   (float32 s)  { return scale(s, s, s); }
+
+    FORCE_INLINE static transform translate_x (float32 tx) { transform tm = identity(); tm._41 = tx; return tm; }
+    FORCE_INLINE static transform translate_y (float32 ty) { transform tm = identity(); tm._42 = ty; return tm; }
+    FORCE_INLINE static transform translate_z (float32 tz) { transform tm = identity(); tm._43 = tz; return tm; }
+    FORCE_INLINE static transform translate   (float32 tx, float32 ty, float32 tz) { transform tm = identity(); tm._41 = tx; tm._42 = ty; tm._43 = tz; return tm; }
+    FORCE_INLINE static transform translate   (vector3 t)  { return translate(t.x, t.y, t.z); }
+    FORCE_INLINE static transform translate   (float32 t)  { return translate(t, t, t); }
+
+    FORCE_INLINE static transform rotate_x (float32 rx) { transform tm = identity(); auto c = cosf(rx); auto s = sinf(rx); tm._22 = tm._33 = c; tm._23 = -(tm._32 = s); return tm; }
+    FORCE_INLINE static transform rotate_y (float32 ry) { transform tm = identity(); auto c = cosf(ry); auto s = sinf(ry); tm._11 = tm._33 = c; tm._13 = -(tm._31 = s); return tm; }
+    FORCE_INLINE static transform rotate_z (float32 rz) { transform tm = identity(); auto c = cosf(rz); auto s = sinf(rz); tm._11 = tm._22 = c; tm._12 = -(tm._21 = s); return tm; }
+};
 
 float32 determinant(transform tm)
 {
@@ -72,7 +86,7 @@ transform inverse(transform tm)
     return result;
 }
 
-FORCE_INLINE matrix4 transform__to_matrix4(transform tm)
+FORCE_INLINE matrix4 to_matrix4(transform tm)
 {
     matrix4 result;
     result._1 = V4(tm._1, 0);
@@ -83,52 +97,42 @@ FORCE_INLINE matrix4 transform__to_matrix4(transform tm)
     return result;
 }
 
-/*
-                  | 11 12 13 0 |
-    | x y z 1 | * | 21 22 23 0 | = | (11x + 21y + 31z + 41),
-                  | 31 32 33 0 |     (12x + 22y + 32z + 42),
-                  | 41 42 43 1 |     (13x + 23y + 33z + 43) |
-*/
 FORCE_INLINE vector3 transform_point(transform tm, vector3 v)
 {
-
     vector3 result;
-    result._e1 = tm._11*v._e1 + tm._21*v._e2 + tm._31*v._e3 + tm._41;
-    result._e2 = tm._12*v._e1 + tm._22*v._e2 + tm._32*v._e3 + tm._42;
-    result._e3 = tm._13*v._e1 + tm._23*v._e2 + tm._33*v._e3 + tm._43;
+    result.x = tm._11*v.x + tm._21*v.y + tm._31*v.z + tm._41;
+    result.y = tm._12*v.x + tm._22*v.y + tm._32*v.z + tm._42;
+    result.z = tm._13*v.x + tm._23*v.y + tm._33*v.z + tm._43;
     return result;
 }
+
 FORCE_INLINE vector4 transform_point(transform tm, vector4 v)
 {
     vector4 result;
-    result._1 = tm._11*v._1 + tm._21*v._2 + tm._31*v._3 + tm._41*v._4;
-    result._2 = tm._12*v._1 + tm._22*v._2 + tm._32*v._3 + tm._42*v._4;
-    result._3 = tm._13*v._1 + tm._23*v._2 + tm._33*v._3 + tm._43*v._4;
-    result._4 = 1.f;
+    result.x = tm._11*v.x + tm._21*v.y + tm._31*v.z + tm._41*v.w;
+    result.y = tm._12*v.x + tm._22*v.y + tm._32*v.z + tm._42*v.w;
+    result.z = tm._13*v.x + tm._23*v.y + tm._33*v.z + tm._43*v.w;
+    result.w = 1.f;
     return result;
 }
-/*
-                  | 11 12 13 0 |
-    | x y z 0 | * | 21 22 23 0 | = | (11x + 21y + 31z),
-                  | 31 32 33 0 |     (12x + 22y + 32z),
-                  | 41 42 43 1 |     (13x + 23y + 33z) |
-*/
+
 FORCE_INLINE vector3 transform_vector(transform tm, vector3 v)
 {
 
     vector3 result;
-    result._e1 = tm._11*v._e1 + tm._21*v._e2 + tm._31*v._e3;
-    result._e2 = tm._12*v._e1 + tm._22*v._e2 + tm._32*v._e3;
-    result._e3 = tm._13*v._e1 + tm._23*v._e2 + tm._33*v._e3;
+    result.x = tm._11*v.x + tm._21*v.y + tm._31*v.z;
+    result.y = tm._12*v.x + tm._22*v.y + tm._32*v.z;
+    result.z = tm._13*v.x + tm._23*v.y + tm._33*v.z;
     return result;
 }
+
 FORCE_INLINE vector4 transform_vector(transform tm, vector4 v)
 {
     vector4 result;
-    result._1 = tm._11*v._1 + tm._21*v._2 + tm._31*v._3;
-    result._2 = tm._12*v._1 + tm._22*v._2 + tm._32*v._3;
-    result._3 = tm._13*v._1 + tm._23*v._2 + tm._33*v._3;
-    result._4 = 0.f;
+    result.x = tm._11*v.x + tm._21*v.y + tm._31*v.z;
+    result.y = tm._12*v.x + tm._22*v.y + tm._32*v.z;
+    result.z = tm._13*v.x + tm._23*v.y + tm._33*v.z;
+    result.w = 0.f;
     return result;
 }
 
@@ -168,104 +172,6 @@ FORCE_INLINE transform operator * (transform s, transform f)
 
     return result;
 }
-
-FORCE_INLINE transform transform__scale_x(float32 sx)
-{
-    transform tm = transform__identity();
-    tm._11 = sx;
-    return tm;
-}
-FORCE_INLINE transform transform__scale_y(float32 sy)
-{
-    transform tm = transform__identity();
-    tm._22 = sy;
-    return tm;
-}
-FORCE_INLINE transform transform__scale_z(float32 sz)
-{
-    transform tm = transform__identity();
-    tm._33 = sz;
-    return tm;
-}
-FORCE_INLINE transform transform__scale(vector3 s)
-{
-    transform tm = transform__identity();
-    tm._11 = s.x;
-    tm._22 = s.y;
-    tm._33 = s.z;
-    return tm;
-}
-FORCE_INLINE transform transform__translate_x(float32 tx)
-{
-    transform tm = transform__identity();
-    tm._41 = tx;
-    return tm;
-}
-FORCE_INLINE transform transform__translate_y(float32 ty)
-{
-    transform tm = transform__identity();
-    tm._42 = ty;
-    return tm;
-}
-FORCE_INLINE transform transform__translate_z(float32 tz)
-{
-    transform tm = transform__identity();
-    tm._43 = tz;
-    return tm;
-}
-FORCE_INLINE transform transform__translate(vector3 t)
-{
-    transform tm = transform__identity();
-    tm._41 = t.x;
-    tm._42 = t.y;
-    tm._43 = t.z;
-    return tm;
-}
-FORCE_INLINE transform transform__rotate_x(float32 rx)
-{
-    //  1  0  0  0
-    //  0  c -s  0
-    //  0  s  c  0
-    //  0  0  0  1
-    transform tm = transform__identity();
-    auto c = math::cos(rx);
-    auto s = math::sin(rx);
-    tm._22 = c; tm._23 = -s;
-    tm._32 = s; tm._33 =  c;
-    return tm;
-}
-FORCE_INLINE transform transform__rotate_y(float32 ry)
-{
-    //  c  0 -s  0
-    //  0  1  0  0
-    //  s  0  c  0
-    //  0  0  0  1
-    transform tm = transform__identity();
-    auto c = math::cos(ry);
-    auto s = math::sin(ry);
-    tm._11 = c; tm._13 = -s;
-    tm._31 = s; tm._33 =  c;
-    return tm;
-}
-FORCE_INLINE transform transform__rotate_z(float32 rz)
-{
-    //  c -s  0  0
-    //  s  c  0  0
-    //  0  0  1  0
-    //  0  0  0  1
-    transform tm = transform__identity();
-    auto c = math::cos(rz);
-    auto s = math::sin(rz);
-    tm._11 = c; tm._12 = -s;
-    tm._21 = s; tm._22 =  c;
-    return tm;
-}
-// FORCE_INLINE transform transform__rotate(vector3 r)
-// {
-//     transform tm = transform__identity();
-
-//     return tm;
-// }
 
 
 #endif // BASED__TRANSFORM_HPP

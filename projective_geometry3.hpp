@@ -1,8 +1,8 @@
-#ifndef BASED__PGA3_HPP
-#define BASED__PGA3_HPP
+#ifndef BASED__PROJECTIVE_GEOMETRY3_HPP
+#define BASED__PROJECTIVE_GEOMETRY3_HPP
 
-#include "g3.hpp"
-
+#include "base.h"
+#include "vector3.hpp"
 
 
 struct plane3
@@ -22,7 +22,7 @@ struct line3
     union
     {
         struct { float32 _e23, _e31, _e12, _e01, _e02, _e03; };
-        struct { vector3 direction; bivector3 moment; };
+        struct { vector3 direction; vector3 moment; };
     };
 };
 
@@ -51,7 +51,7 @@ line3 make_line3(vector3 direction, vector3 point_on_line)
 {
     line3 result;
     result.direction = direction;
-    result.moment = outer(point_on_line, point_on_line + direction);
+    result.moment = cross(point_on_line, point_on_line + direction);
     return result;
 }
 
@@ -252,4 +252,4 @@ plane3 join(line3 l, point3 pt)
 }
 
 
-#endif // BASED__PGA3_HPP
+#endif // BASED__PROJECTIVE_GEOMETRY3_HPP

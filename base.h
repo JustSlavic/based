@@ -153,8 +153,8 @@ typedef __builtin_va_list va_list;
 #define INLINE     inline
 
 #ifdef DEBUG
-#define ASSERT(COND)          if (COND) {} else { DEBUG_BREAK(); } (void)(0)
-#define ASSERT_MSG(COND, ...) if (COND) {} else { DEBUG_BREAK(); } (void)(0)
+#define ASSERT(COND)          do {if (COND) {} else { DEBUG_BREAK(); }} while(false)
+#define ASSERT_MSG(COND, ...) do {if (COND) {} else { DEBUG_BREAK(); }} while(false)
 #else
 #define ASSERT(COND)          (void)(0)
 #define ASSERT_MSG(COND, ...) (void)(0)
