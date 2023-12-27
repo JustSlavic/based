@@ -54,7 +54,7 @@ transform inverse(transform tm)
     transform result = {};
 
     float32 det = determinant(tm.matrix);
-    if (!math::near_zero(det))
+    if (!near_zero(det))
     {
         result.matrix = (1.0f / det) * adjoint(tm.matrix);
 
@@ -93,9 +93,9 @@ FORCE_INLINE vector3 transform_point(transform tm, vector3 v)
 {
 
     vector3 result;
-    result._1 = tm._11*v._1 + tm._21*v._2 + tm._31*v._3 + tm._41;
-    result._2 = tm._12*v._1 + tm._22*v._2 + tm._32*v._3 + tm._42;
-    result._3 = tm._13*v._1 + tm._23*v._2 + tm._33*v._3 + tm._43;
+    result._e1 = tm._11*v._e1 + tm._21*v._e2 + tm._31*v._e3 + tm._41;
+    result._e2 = tm._12*v._e1 + tm._22*v._e2 + tm._32*v._e3 + tm._42;
+    result._e3 = tm._13*v._e1 + tm._23*v._e2 + tm._33*v._e3 + tm._43;
     return result;
 }
 FORCE_INLINE vector4 transform_point(transform tm, vector4 v)
@@ -117,9 +117,9 @@ FORCE_INLINE vector3 transform_vector(transform tm, vector3 v)
 {
 
     vector3 result;
-    result._1 = tm._11*v._1 + tm._21*v._2 + tm._31*v._3;
-    result._2 = tm._12*v._1 + tm._22*v._2 + tm._32*v._3;
-    result._3 = tm._13*v._1 + tm._23*v._2 + tm._33*v._3;
+    result._e1 = tm._11*v._e1 + tm._21*v._e2 + tm._31*v._e3;
+    result._e2 = tm._12*v._e1 + tm._22*v._e2 + tm._32*v._e3;
+    result._e3 = tm._13*v._e1 + tm._23*v._e2 + tm._33*v._e3;
     return result;
 }
 FORCE_INLINE vector4 transform_vector(transform tm, vector4 v)

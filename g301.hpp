@@ -215,6 +215,12 @@ FORCE_INLINE matrix4 matrix4__scale(float32 sx, float32 sy, float32 sz)
     m._33 = sz;
     return m;
 }
+FORCE_INLINE matrix4 matrix4__scale(float s)
+{
+    matrix4 m = matrix4__identity();
+    m._11 = m._22 = m._33 = s;
+    return m;
+}
 FORCE_INLINE matrix4 matrix4__scale(vector3 s) { return matrix4__scale(s.x, s.y, s.z); }
 FORCE_INLINE matrix4 matrix4__translate_x(float32 tx) { matrix4 m = matrix4__identity(); m._14 = tx; return m; }
 FORCE_INLINE matrix4 matrix4__translate_y(float32 ty) { matrix4 m = matrix4__identity(); m._24 = ty; return m; }

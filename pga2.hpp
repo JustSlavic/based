@@ -56,7 +56,7 @@ struct flector
 {
     union
     {
-        struct { float32 _e1, _e2, _e0, _e012; };
+        struct { float32 _e1, _e2, _e0, _e120; };
         struct { float32 a, b, c, f; };
         struct { line line; float32 pad2; };
     };
@@ -155,7 +155,7 @@ point operator + (vector2 v, point p)
 motor operator * (line l1, line l2)
 {
     // (a1e1 + b1e2 + c1e0)(a2e1 + b2e2 + c2e0) =
-    // (a1a2 + b1b2) _1_ +
+    // (a1a2 + b1b2) _1  +
     // (b1c2 - c1b2) e20 +
     // (c1a2 - a1c2) e01 +
     // (a1b2 - b1a2) e12
@@ -178,7 +178,7 @@ flector operator * (line l, point p)
     result._e1   = -l.b * p.w;
     result._e2   =  l.a * p.w;
     result._e0   =  l.b * p.x - l.a * p.y;
-    result._e012 =  l.a * p.x + l.b * p.y + l.c * p.w;
+    result._e120 =  l.a * p.x + l.b * p.y + l.c * p.w;
     return result;
 }
 
@@ -193,7 +193,7 @@ flector operator * (motor m, line l)
     result._e1 = (m._1 * l._e1 + m._e12 * l._e2);
     result._e2 = (m._1 * l._e2 - m._e12 * l._e1);
     result._e0 = (m._1 * l._e0 - m._e20 * l._e2 + m._e01 * l._e1);
-    result._e012 = (m._e12 * l._e0 + m._e20 * l._e1 + m._e01 * l._e2);
+    result._e120 = (m._e12 * l._e0 + m._e20 * l._e1 + m._e01 * l._e2);
     return result;
 }
 
@@ -252,8 +252,8 @@ flector operator * (flector f, motor m)
     flector result;
     result._e1   = (f._e1 * m._1   - f._e2 * m._e12);
     result._e2   = (f._e1 * m._e12 + f._e2 * m._1);
-    result._e0   = (f._e2 * m._e20 - f._e1 * m._e01 + f._e0 * m._1   - f._e012 * m._e12);
-    result._e012 = (f._e1 * m._e20 + f._e2 * m._e01 + f._e0 * m._e12 + f._e012 * m._1);
+    result._e0   = (f._e2 * m._e20 - f._e1 * m._e01 + f._e0 * m._1   - f._e120 * m._e12);
+    result._e120 = (f._e1 * m._e20 + f._e2 * m._e01 + f._e0 * m._e12 + f._e120 * m._1);
     return result;
 }
 

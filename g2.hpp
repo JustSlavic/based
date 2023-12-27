@@ -71,7 +71,7 @@ FORCE_INLINE complex outer(vector2 a, vector2 b) { complex r; r.re = 0.f; r.im =
 
 FORCE_INLINE float32 length_squared(vector2 a) { return inner(a, a); }
 FORCE_INLINE float32 length(vector2 a) { return math::square_root(length_squared(a)); }
-FORCE_INLINE void normalize(vector2 & a) { float32 n = length(a); if (!math::near_zero(n)) { a /= n; } }
+FORCE_INLINE void normalize(vector2 & a) { float32 n = length(a); if (!near_zero(n)) { a /= n; } }
 FORCE_INLINE vector2 normalized(vector2 a) { normalize(a); return a; }
 
 FORCE_INLINE bool operator == (complex a, complex b) { bool r = (a.re == b.re) && (a.im == b.im); return r; }
@@ -200,7 +200,7 @@ FORCE_INLINE matrix2 inverse(matrix2 const & m)
     matrix2 result = {};
 
     float32 det = determinant(m);
-    if (!math::near_zero(det))
+    if (!near_zero(det))
     {
         result = (1.0f / det) * adjoint(m);
     }
