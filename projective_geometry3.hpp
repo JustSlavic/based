@@ -251,5 +251,41 @@ plane3 join(line3 l, point3 pt)
     return result;
 }
 
+line3 project(line3 l, plane3 p)
+{
+    line3 result = outer(inner(p, l), p);
+    return result;
+}
+
+plane3 project(plane3 p, line3 l)
+{
+    plane3 result = inner(inner(l, p), l);
+    return result;
+}
+
+line3 project(line3 l, point3 pt)
+{
+    line3 result = inner(inner(pt, l), pt);
+    return result;
+}
+
+point3 project(point3 pt, line3 l)
+{
+    point3 result = outer(inner(l, pt), l);
+    return result;
+}
+
+point3 project(point3 pt, plane3 p)
+{
+    point3 result = outer(inner(p, pt), p);
+    return result;
+}
+
+plane3 project(plane3 p, point3 pt)
+{
+    plane3 result = inner(inner(pt, p), pt);
+    return result;
+}
+
 
 #endif // BASED__PROJECTIVE_GEOMETRY3_HPP
