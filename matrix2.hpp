@@ -1,18 +1,36 @@
 #ifndef BASED__MATRIX2_HPP
 #define BASED__MATRIX2_HPP
 
+#include "base.h"
+#include "vector2.hpp"
+
 
 struct matrix2
 {
     union
     {
-        struct {
+        struct
+        {
             float32 _11, _12;
             float32 _21, _22;
         };
         vector2 row[2];
         float32 e[2][2];
     };
+
+    vector2 & operator [] (int32 index)
+    {
+        ASSERT(index < 2);
+        return row[index];
+    }
+
+    vector2 const & operator [] (int32 index) const
+    {
+        ASSERT(index < 2);
+        return row[index];
+    }
+
+    FORCE_INLINE static matrix2 identity() { matrix2 m = {}; m._11 = m._22 = 1.f; return m; }
 };
 
 

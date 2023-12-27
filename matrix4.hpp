@@ -25,10 +25,16 @@ struct matrix4
         float32 e[4][4];
     };
 
-    float32 (& operator [] (int32 index)) [4]
+    vector4 & operator [] (int32 index)
     {
         ASSERT(index < 4);
-        return e[index];
+        return row[index];
+    }
+
+    vector4 const & operator [] (int32 index) const
+    {
+        ASSERT(index < 4);
+        return row[index];
     }
 
     FORCE_INLINE static matrix4 identity () { matrix4 m = {}; m._11 = m._22 = m._33 = m._44 = 1.f; return m; }

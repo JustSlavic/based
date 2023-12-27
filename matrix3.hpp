@@ -23,6 +23,18 @@ struct matrix3
         float32 e[3][3];
     };
 
+    vector3 & operator [] (int32 index)
+    {
+        ASSERT(index < 3);
+        return row[index];
+    }
+
+    vector3 const & operator [] (int32 index) const
+    {
+        ASSERT(index < 3);
+        return row[index];
+    }
+
     FORCE_INLINE static matrix3 identity() { matrix3 m = {}; m._11 = m._22 = m._33 = 1.f; return m; }
 };
 
