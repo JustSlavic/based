@@ -23,22 +23,21 @@
 
 typedef struct memory_allocator_t *memory_allocator;
 
+memory_allocator make_memory_arena     (memory_block);
+memory_allocator allocate_memory_arena (memory_allocator, usize);
+void             memory_arena__reset   (memory_allocator a);
 
-memory_allocator memory_allocator__create_arena_from_memory_block(memory_block block);
-memory_allocator memory_allocator__create_arena(memory_allocator parent, usize size);
-void memory_allocator__destroy_arena(memory_allocator arena);
+// @todo: memory_stack
+// @todo: memory_pool
+// @todo: memory_heap
 
-// void memory_allocator__initialize_stack(struct void *a, void *memory, usize size);
-// void memory_allocator__initialize_pool(struct void *a, void *memory, usize size);
-// void memory_allocator__initialize_heap(struct void *a, void *memory, usize size);
+memory_allocator mallocator ();
 
-memory_block memory_allocator__allocate_copy(memory_allocator a, memory_block block);
-
-memory_block memory_allocator__allocate_(memory_allocator a, usize size, usize alignment);
-memory_block memory_allocator__allocate(memory_allocator a, usize size, usize alignment);
-void memory_allocator__deallocate(memory_allocator a, memory_block block);
-memory_block memory_allocator__reallocate(memory_allocator a, memory_block block, usize new_size);
-void memory_allocator__reset(memory_allocator a);
+memory_block memory_allocator__allocate_     (memory_allocator a, usize size, usize alignment);
+memory_block memory_allocator__allocate      (memory_allocator a, usize size, usize alignment);
+void         memory_allocator__deallocate    (memory_allocator a, memory_block block);
+memory_block memory_allocator__reallocate    (memory_allocator a, memory_block block, usize new_size);
+memory_block memory_allocator__allocate_copy (memory_allocator a, memory_block block);
 
 
 #endif // BASED__MEMORY_ALLOCATOR_H
