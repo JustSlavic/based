@@ -16,7 +16,9 @@ void string_builder__append_format(string_builder *sb, char const *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    int copied_bytes = vsprintf((char *) sb->memory.memory + sb->used, fmt, args);
+    char *cursor = (char *) sb->memory.memory + sb->used;
+    usize buffer_size = sb->memory.size - sb->used;
+    int copied_bytes = vsnprintf(cursor, buffer_size, fmt, args);
     va_end(args);
 
     if (copied_bytes > 0)

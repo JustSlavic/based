@@ -141,6 +141,8 @@ typedef __builtin_va_list va_list;
 #endif
 #endif // C
 
+#define VA_ARGS(...) , ##__VA_ARGS__
+
 #ifndef NULL
 #define NULL 0
 #endif
