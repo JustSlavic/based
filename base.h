@@ -1,14 +1,25 @@
 #ifndef BASED__BASE_HPP
 #define BASED__BASE_HPP
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #define COMPILER_MSVC 1
-#elif __GNUC__
+#elif defined(__GNUC__)
 #define COMPILER_GNU 1
-#elif __clang__
+#elif defined(__clang__)
 #define COMPILER_CLANG 1
-#elif __MINGW32__
+#elif defined(__MINGW32__)
 #define COMPILER_MINGW 1
+#endif
+
+#if defined(_WIN32) || defined(_WIN64)
+#define OS_WINDOWS 1
+#elif defined(__linux__) || defined(__linux) || defined(linux)
+#define OS_LINUX 1
+#elif defined(__APPLE__) || defined(__MACH__)
+#define OS_MAC 1
+#elif defined(__FreeBSD__)
+#define OS_FREEBSD 1
+#elif defined(__unix__) || defined(__unix) || defined(unix)
 #endif
 
 // Detect the 32-bit or 64-bit architecture
