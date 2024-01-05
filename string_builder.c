@@ -27,6 +27,18 @@ void string_builder__append_format(string_builder *sb, char const *fmt, ...)
     }
 }
 
+void string_builder__append_format_va_list(string_builder *sb, char const *fmt, va_list args)
+{
+    char *cursor = (char *) sb->memory.memory + sb->used;
+    usize buffer_size = sb->memory.size - sb->used;
+    int copied_bytes = vsnprintf(cursor, buffer_size, fmt, args);
+
+    if (copied_bytes > 0)
+    {
+        sb->used += copied_bytes;
+    }
+}
+
 void string_builder__append_buffer(string_builder *sb, memory_block str)
 {
     if (sb->used + str.size < sb->memory.size)
