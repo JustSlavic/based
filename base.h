@@ -44,9 +44,17 @@ typedef double           float64;
 
 #if DEBUG
 #define DEBUG_BREAK __debugbreak
+// #if defined(__arm__) && !defined(__thumb__) // ARM
+// #define DEBUG_BREAK() { __asm__ volatile(".inst 0xe7f001f0"); } (void)0
+// #elif defined(__aarch64__) && defined(__APPLE__) // Apple
+// #define DEBUG_BREAK() { __builtin_debugtrap(); } (void)0
+// #elif defined(__aarch64__)
+// #define DEBUG_BREAK() { __asm__ volatile(".inst 0xd4200000"); } (void)0
+// #endif
 #else
 #define DEBUG_BREAK
 #endif // DEBUG
+
 
 #define FORCE_INLINE __forceinline
 #define DLL_EXPORT __declspec(dllexport)
