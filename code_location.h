@@ -8,8 +8,20 @@ struct code_location
     char const *filename;
     int line;
 };
+typedef struct code_location code_location;
 
-#define CL_HERE (struct code_location){ .function = __FUNCTION__, .filename = __FILE__, .line = __LINE__, }
+
+FORCE_INLINE
+code_location make_code_location(char const *function, char const *filename, int line)
+{
+    code_location result;
+    result.function = function;
+    result.filename = filename;
+    result.line = line;
+    return result;
+}
+
+#define CL_HERE make_code_location(__FUNCTION__, __FILE__, __LINE__)
 
 
 #endif // BASED__CODE_LOCATION_H

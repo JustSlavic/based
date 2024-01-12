@@ -10,10 +10,6 @@ typedef struct memory_block
     usize size;
 } memory_block;
 
-typedef struct string {
-    char const *memory;
-    usize size;
-} string;
 
 FORCE_INLINE
 memory_block memory__advance_block(memory_block *block, usize bytes)
@@ -71,19 +67,32 @@ byte *memory__align_pointer(void *pointer, usize alignment)
     return result;
 }
 
-FORCE_INLINE usize cstring__size_no0(char const *cstr)
+FORCE_INLINE
+usize cstring__size_no0(char const *cstr)
 {
     usize result = 0;
     while (*cstr++) result += 1;
     return result;
 }
 
-FORCE_INLINE usize cstring__size_with0(char const *cstr)
+FORCE_INLINE
+usize cstring__size_with0(char const *cstr)
 {
     usize result = cstring__size_no0(cstr) + 1;
     return result;
 }
 
+FORCE_INLINE
+int cstring__compare_cn(char const *s1, char const *s2, usize n)
+{
+    if (n > 0) do
+    {
+        if (*s1 != *s2) return ((int)(*s1)) - ((int)(*s2));
+        if (*s1 ==   0) break;
+    }
+    while (n-->0);
+    return (*s1 > 0) - n;
+}
 
 
 #endif // BASED__MEMORY_H

@@ -5,10 +5,11 @@
 #include "memory.h"
 
 
-typedef struct string_builder {
+struct string_builder {
     memory_block memory;
     usize used;
-} string_builder;
+};
+typedef struct string_builder string_builder;
 
 
 void string_builder__append_string(string_builder *sb, char const *str);

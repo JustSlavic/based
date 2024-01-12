@@ -1,33 +1,30 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <base.h>
-#include <code_location.h>
+#include "base.h"
+#include "string_builder.h"
+#include "code_location.h"
 
 
 struct logger
 {
-    char const *filename;
     string_builder sb;
 };
 
-#if DEBUG
+#define LOGGER(WHERE_TO_FIND_IT) struct logger *logger = (WHERE_TO_FIND_IT)->logger
 
+#if DEBUG
 void logger__log(struct logger *logger, struct code_location cl, char const *fmt, ...);
 void logger__log_untrusted(struct logger *logger, struct code_location cl, char const *buffer, usize size);
 #define LOG(FORMAT, ...) logger__log(logger, CL_HERE, (FORMAT) VA_ARGS(__VA_ARGS__))
-#define LOG_UNTRUSTED(BUFFER, SIZE) logger__log_untrusted(logger, CL_HERE, (char const *)(BUFFER), (SIZE))
-
 #else
-
 void logger__log(struct logger *logger, char const *fmt, ...);
 void logger__log_untrusted(struct logger *logger, char const *buffer, usize size);
 #define LOG(FORMAT, ...) logger__log(logger, (FORMAT) VA_ARGS(__VA_ARGS__))
-#define LOG_UNTRUSTED(BUFFER, SIZE) logger__log_untrusted(logger, (char const *)(BUFFER), (SIZE))
-
 #endif
 
-void logger__flush(struct logger *logger);
+void logger__flush_filename(struct logger *logger, char const *filename, usize rotate_size);
+void logger__flush_file(struct logger *logger, int fd);
 
 
 #endif // LOGGER_H

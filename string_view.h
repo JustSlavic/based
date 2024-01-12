@@ -4,10 +4,11 @@
 #include "base.h"
 
 
-typedef struct string_view {
+struct string_view {
     char const *data;
     usize size;
-} string_view;
+};
+typedef struct string_view string_view;
 
 
 #endif // BASED__STRING_VIEW
