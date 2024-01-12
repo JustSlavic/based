@@ -15,11 +15,9 @@ struct logger
 
 #if DEBUG
 void logger__log(struct logger *logger, struct code_location cl, char const *fmt, ...);
-void logger__log_untrusted(struct logger *logger, struct code_location cl, char const *buffer, usize size);
 #define LOG(FORMAT, ...) logger__log(logger, CL_HERE, (FORMAT) VA_ARGS(__VA_ARGS__))
 #else
 void logger__log(struct logger *logger, char const *fmt, ...);
-void logger__log_untrusted(struct logger *logger, char const *buffer, usize size);
 #define LOG(FORMAT, ...) logger__log(logger, (FORMAT) VA_ARGS(__VA_ARGS__))
 #endif
 

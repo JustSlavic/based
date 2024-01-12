@@ -4,11 +4,12 @@
 #include "base.h"
 
 
-typedef struct memory_block
+struct memory_block
 {
     byte *memory;
     usize size;
-} memory_block;
+};
+typedef struct memory_block memory_block;
 
 
 FORCE_INLINE
