@@ -3,7 +3,7 @@
 
 #if defined(_MSC_VER)
 #define COMPILER_MSVC 1
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) && !defined(__clang__)
 #define COMPILER_GNU 1
 #elif defined(__clang__)
 #define COMPILER_CLANG 1
@@ -106,6 +106,28 @@ typedef unsigned long long   uint64;
 #endif // COMPILER_GNU
 
 #if COMPILER_CLANG
+typedef   signed char        int8;
+typedef   signed short       int16;
+typedef   signed int         int32;
+typedef unsigned char        uint8;
+typedef unsigned short       uint16;
+typedef unsigned int         uint32;
+typedef float                float32;
+typedef double               float64;
+
+#define FORCE_INLINE         __attribute__((always_inline)) inline
+
+#if DEBUG
+#define DEBUG_BREAK __builtin_trap
+#else
+#define DEBUG_BREAK
+#endif // DEBUG
+
+#define DO_PRAGMA(S) _Pragma(#S)
+#define SUPRESS_WARNING_PUSH(OPT) \
+    DO_PRAGMA(clang diagnostic push); \
+    DO_PRAGMA(clang diagnostic ignored OPT);
+#define SUPRESS_WARNING_POP() DO_PRAGMA(clang diagnostic pop)
 #endif // COMPILER_CLANG
 
 #if ARCH_32BIT
