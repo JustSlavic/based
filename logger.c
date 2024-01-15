@@ -43,7 +43,7 @@ void logger__flush_file(struct logger *logger, int fd)
 
 void logger__flush_filename(struct logger *logger, char const *filename, usize rotate_size)
 {
-    int fd = open(filename, O_NOFOLLOW | O_CREAT | O_APPEND | O_RDWR, 0666);
+    int fd = open(filename, O_CREAT | O_APPEND | O_RDWR, 0666);
     if (fd < 0)
     {
         fprintf(stderr, "Could not open log file (errno: %d - \"%s\")\n", errno, strerror(errno));
@@ -76,7 +76,7 @@ void logger__flush_filename(struct logger *logger, char const *filename, usize r
                 return;
             }
 
-            fd = open(filename, O_NOFOLLOW | O_CREAT | O_TRUNC | O_WRONLY, 0666);
+            fd = open(filename, O_CREAT | O_TRUNC | O_WRONLY, 0666);
             if (fd < 0)
             {
                 fprintf(stderr, "Could not open new logger file (errno : %d - \"%s\")\n", errno, strerror(errno));
