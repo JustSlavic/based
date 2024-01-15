@@ -239,8 +239,6 @@ struct memory_allocator__report memory_allocator__report(memory_allocator a)
         case MEMORY_ALLOCATOR_MALLOC:
         {
 #if OS_LINUX
-            memory_mallocator *mallocator = (memory_mallocator *) a;
-
             struct mallinfo2 info = mallinfo2();
             report.size = info.uordblks;
             report.used = report.size - info.fordblks;
