@@ -2,6 +2,15 @@
 #include "memory.h"
 
 
+string_builder make_string_builder(memory_block blk)
+{
+    string_builder result = {
+        .memory = blk,
+        .used = 0,
+    };
+    return result;
+}
+
 void string_builder__append_string(string_builder *sb, char const *str)
 {
     usize string_size = cstring__size_no0(str);

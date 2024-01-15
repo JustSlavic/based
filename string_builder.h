@@ -12,6 +12,8 @@ struct string_builder {
 typedef struct string_builder string_builder;
 
 
+string_builder make_string_builder(memory_block blk);
+
 void string_builder__append_string(string_builder *sb, char const *str);
 void string_builder__append_format(string_builder *sb, char const *fmt, ...);
 void string_builder__append_format_va_list(string_builder *sb, char const *fmt, va_list args);

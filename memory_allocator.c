@@ -1,5 +1,8 @@
 #include "memory_allocator.h"
 
+#if OS_LINUX
+#include <malloc.h>
+#endif
 
 #define MINIMAL_MEMORY_PAGE_SIZE MEGABYTES(1)
 
@@ -213,4 +216,46 @@ memory_block memory_allocator__allocate_copy(memory_allocator a, memory_block bl
     memory__copy(result.memory, block.memory, block.size);
     return result;
 }
+
+struct memory_allocator__report memory_allocator__report(memory_allocator a)
+{
+    struct memory_allocator__report report;
+
+    memory_allocator_type type = *(memory_allocator_type *) a;
+    switch (type)
+    {
+        case MEMORY_ALLOCATOR_ARENA:
+        {
+            memory_arena *arena = (memory_arena *) a;
+            report.size = arena->size;
+            report.used = arena->used;
+        }
+        break;
+
+        case MEMORY_ALLOCATOR_STACK:
+        case MEMORY_ALLOCATOR_POOL:
+        case MEMORY_ALLOCATOR_HEAP:
+
+        case MEMORY_ALLOCATOR_MALLOC:
+        {
+#if OS_LINUX
+            memory_mallocator *mallocator = (memory_mallocator *) a;
+
+            struct mallinfo2 info = mallinfo2();
+            report.size = info.uordblks;
+            report.used = report.size - info.fordblks;
+#else
+            report.size = 0;
+            report.used = 0;
+#endif
+        }
+        break;
+
+        default:
+            ASSERT_FAIL();
+    }
+
+    return report;
+}
+
 

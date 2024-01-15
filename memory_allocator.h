@@ -31,13 +31,21 @@ void             memory_arena__reset   (memory_allocator a);
 // @todo: memory_pool
 // @todo: memory_heap
 
-memory_allocator mallocator ();
+memory_allocator mallocator(void);
 
 memory_block memory_allocator__allocate_     (memory_allocator a, usize size, usize alignment);
 memory_block memory_allocator__allocate      (memory_allocator a, usize size, usize alignment);
 void         memory_allocator__deallocate    (memory_allocator a, memory_block block);
 memory_block memory_allocator__reallocate    (memory_allocator a, memory_block block, usize new_size);
 memory_block memory_allocator__allocate_copy (memory_allocator a, memory_block block);
+
+struct memory_allocator__report
+{
+    usize size;
+    usize used;
+};
+
+struct memory_allocator__report memory_allocator__report(memory_allocator a);
 
 
 #endif // BASED__MEMORY_ALLOCATOR_H

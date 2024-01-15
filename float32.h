@@ -10,6 +10,7 @@ GLOBAL const float32 half_pi = 0.5f * pi;
 GLOBAL const float32 infinity = HUGE_VALF;
 
 
+#if 0
 float32 sin(float32 x)
 {
     float32 result = sinf(x);
@@ -21,6 +22,13 @@ float32 cos(float32 x)
     float32 result = cosf(x);
     return result;
 }
+
+bool32 finite(float32 x)
+{
+    bool32 result = (-infinity < x) && (x < infinity);
+    return result;
+}
+#endif
 
 float32 absolute(float32 x)
 {
@@ -62,21 +70,27 @@ float32 to_degrees(float32 radians)
     return result;
 }
 
-bool32 near_zero(float32 x, float32 eps = EPSILON)
+bool32 near_zero(float32 x)
+{
+    bool32 result = (-EPSILON < x) && (x < EPSILON);
+    return result;
+}
+
+bool32 near_zero_eps(float32 x, float32 eps)
 {
     bool32 result = (-eps < x) && (x < eps);
     return result;
 }
 
-bool32 equal(float32 x, float32 y, float32 eps = EPSILON)
+bool32 equal(float32 x, float32 y)
 {
-    bool32 result = near_zero(x - y, eps);
+    bool32 result = near_zero(x - y);
     return result;
 }
 
-bool32 finite(float32 x)
+bool32 equal_eps(float32 x, float32 y, float32 eps)
 {
-    bool32 result = (-infinity < x) && (x < infinity);
+    bool32 result = near_zero_eps(x - y, eps);
     return result;
 }
 

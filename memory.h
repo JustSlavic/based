@@ -46,7 +46,7 @@ byte *memory__copy(void *destination, void const *source, usize count)
 }
 
 FORCE_INLINE
-memory_block memory__empty_block()
+memory_block memory__empty_block(void)
 {
     memory_block result;
     memory__set(&result, 0, sizeof(memory_block));
