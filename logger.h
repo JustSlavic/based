@@ -15,10 +15,10 @@ struct logger
 
 #if DEBUG
 void logger__log(struct logger *logger, struct code_location cl, char const *fmt, ...);
-#define LOG(FORMAT, ...) logger__log(logger, CL_HERE, (FORMAT) VA_ARGS(__VA_ARGS__))
+#define LOG(FORMAT, ...) logger__log(logger, CL_HERE, (FORMAT), ##__VA_ARGS__)
 #else
 void logger__log(struct logger *logger, char const *fmt, ...);
-#define LOG(FORMAT, ...) logger__log(logger, (FORMAT) VA_ARGS(__VA_ARGS__))
+#define LOG(FORMAT, ...) logger__log(logger, (FORMAT), ##__VA_ARGS__)
 #endif
 
 void logger__flush_filename(struct logger *logger, char const *filename, usize rotate_size);
