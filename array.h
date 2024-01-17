@@ -19,8 +19,8 @@ struct array_header
         } \
     } while (0)
 
-// #define ALLOCATE_ARRAY_(ALLOCATOR, TYPE, CAPACITY) \
-//     do { \
+// #define ALLOCATE_ARRAY_(ALLOCATOR, TYPE, CAPACITY)
+//     do {
 //         memory_block blk = ALLOCATE_BUFFER(ALLOCATOR, )
 //     } while (0)
 
