@@ -198,6 +198,7 @@ void memory_allocator__deallocate(memory_allocator a, memory_block block)
             break;
         case MEMORY_ALLOCATOR_MALLOC:
             mallocator_deallocate(a, block);
+            break;
         default:
             ASSERT_FAIL();
     }
@@ -250,6 +251,7 @@ struct memory_allocator__report memory_allocator__report(memory_allocator a)
         break;
 
         default:
+            memory__set(&report, 0, sizeof(report));
             ASSERT_FAIL();
     }
 
