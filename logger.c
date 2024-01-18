@@ -43,9 +43,7 @@ void logger__flush_file(struct logger *logger, int fd)
 
 void logger__flush_filename(struct logger *logger, char const *filename, usize rotate_size)
 {
-    bool32 should_rename = rotate_size > 0;
-    bool32 renamed = false;
-    if (should_rename)
+    if (rotate_size > 0)
     {
         struct stat st;
         int fstat_result = stat(filename, &st);
@@ -67,10 +65,6 @@ void logger__flush_filename(struct logger *logger, char const *filename, usize r
                 {
                     fprintf(stderr, "Could not rename logger file to rotate (errno : %d - \"%s\")\n", errno, strerror(errno));
                 }
-                else
-                {
-                    renamed = true;
-                }
             }
         }
     }
@@ -82,21 +76,7 @@ void logger__flush_filename(struct logger *logger, char const *filename, usize r
     }
     else
     {
-        bool32 ok = true;
-        if (should_rename && !renamed)
-        {
-            int truncate_result = ftruncate(fd, 0);
-            if (truncate_result < 0)
-            {
-                fprintf(stderr, "Could not truncate log file (errno: %d - \"%s\")\n", errno, strerror(errno));
-            }
-            else
-            {
-                ok = false;
-            }
-        }
-
-        if (ok) logger__flush_file(logger, fd);
+        logger__flush_file(logger, fd);
         close(fd);
     }
 }
