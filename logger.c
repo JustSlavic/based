@@ -43,47 +43,60 @@ void logger__flush_file(struct logger *logger, int fd)
 
 void logger__flush_filename(struct logger *logger, char const *filename, usize rotate_size)
 {
+    bool32 should_rename = rotate_size > 0;
+    bool32 renamed = false;
+    if (should_rename)
+    {
+        struct stat st;
+        int fstat_result = stat(filename, &st);
+        if (fstat_result < 0)
+        {
+            fprintf(stderr, "Could not get stats on log file (errno: %d - \"%s\")\n", errno, strerror(errno));
+        }
+        else
+        {
+            if (st.st_size > rotate_size)
+            {
+                char new_filename[512];
+                memory__set(new_filename, 0, sizeof(new_filename));
+                memory__copy(new_filename, filename, cstring__size_no0(filename));
+                memory__copy(new_filename + cstring__size_no0(filename), ".1", 2);
+
+                int rename_result = rename(filename, new_filename);
+                if (rename_result < 0)
+                {
+                    fprintf(stderr, "Could not rename logger file to rotate (errno : %d - \"%s\")\n", errno, strerror(errno));
+                }
+                else
+                {
+                    renamed = true;
+                }
+            }
+        }
+    }
+
     int fd = open(filename, O_CREAT | O_APPEND | O_RDWR, 0666);
     if (fd < 0)
     {
         fprintf(stderr, "Could not open log file (errno: %d - \"%s\")\n", errno, strerror(errno));
-        return;
     }
-
-    if (rotate_size > 0)
+    else
     {
-        struct stat st;
-        int fstat_result = fstat(fd, &st);
-        if (fstat_result < 0)
+        bool32 ok = true;
+        if (should_rename && !renamed)
         {
-            fprintf(stderr, "Could not get stats on log file (errno: %d - \"%s\")\n", errno, strerror(errno));
-            return;
-        }
-
-        if (st.st_size > rotate_size)
-        {
-            close(fd);
-
-            char new_name_buffer[512];
-            memory__set(new_name_buffer, 0, sizeof(new_name_buffer));
-            memory__copy(new_name_buffer, filename, cstring__size_no0(filename));
-            memory__copy(new_name_buffer + cstring__size_no0(filename), ".1", 2);
-
-            int rename_result = rename(filename, new_name_buffer);
-            if (rename_result < 0)
+            int truncate_result = ftruncate(fd, 0);
+            if (truncate_result < 0)
             {
-                fprintf(stderr, "Could not rename logger file to rotate (errno : %d - \"%s\")\n", errno, strerror(errno));
-                return;
+                fprintf(stderr, "Could not truncate log file (errno: %d - \"%s\")\n", errno, strerror(errno));
             }
-
-            fd = open(filename, O_CREAT | O_TRUNC | O_WRONLY, 0666);
-            if (fd < 0)
+            else
             {
-                fprintf(stderr, "Could not open new logger file (errno : %d - \"%s\")\n", errno, strerror(errno));
-                return;
+                ok = false;
             }
         }
+
+        if (ok) logger__flush_file(logger, fd);
+        close(fd);
     }
-
-    logger__flush_file(logger, fd);
 }
