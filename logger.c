@@ -10,73 +10,81 @@
 #include <time.h>
 
 
-void logger__log(struct logger *logger,
-#if DEBUG
-                 struct code_location cl,
-#endif
-                 char const *fmt, ...)
+void logger__flush(struct logger *logger)
 {
-    va_list args;
-    va_start(args, fmt);
-#if DEBUG
-    printf("[%s:%d] ", cl.filename, cl.line);
-    vprintf(fmt, args);
-#else
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
-    string_builder__append_format(&logger->sb, "[%d-%02d-%02d %02d:%02d:%02d] ", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-    string_builder__append_format_va_list(&logger->sb, fmt, args);
-#endif
-    va_end(args);
-}
-
-void logger__flush_file(struct logger *logger, int fd)
-{
-    memory_block string_to_write = string_builder__get_string(&logger->sb);
-    isize bytes_written = write(fd, string_to_write.memory, string_to_write.size);
-    if (bytes_written < 0)
+    if (logger->type == LOGGER__FILE)
     {
-        fprintf(stderr, "Error write logger file (errno: %d - \"%s\")\n", errno, strerror(errno));
-    }
-    string_builder__reset(&logger->sb);
-}
-
-void logger__flush_filename(struct logger *logger, char const *filename, usize rotate_size)
-{
-    if (rotate_size > 0)
-    {
-        struct stat st;
-        int fstat_result = stat(filename, &st);
-        if (fstat_result < 0)
+        if (logger->rotate_size > 0)
         {
-            fprintf(stderr, "Could not get stats on log file (errno: %d - \"%s\")\n", errno, strerror(errno));
-        }
-        else
-        {
-            if (st.st_size > rotate_size)
+            struct stat st;
+            int fstat_result = stat(logger->filename, &st);
+            if (fstat_result < 0)
             {
-                char new_filename[512];
-                memory__set(new_filename, 0, sizeof(new_filename));
-                memory__copy(new_filename, filename, cstring__size_no0(filename));
-                memory__copy(new_filename + cstring__size_no0(filename), ".1", 2);
-
-                int rename_result = rename(filename, new_filename);
-                if (rename_result < 0)
+                if (errno != ENOENT)
                 {
-                    fprintf(stderr, "Could not rename logger file to rotate (errno : %d - \"%s\")\n", errno, strerror(errno));
+                    fprintf(stderr, "Could not get stats on log file (errno: %d - \"%s\")\n", errno, strerror(errno));
+                }
+            }
+            else
+            {
+                if (st.st_size > logger->rotate_size)
+                {
+                    char new_filename[512];
+                    memory__set(new_filename, 0, sizeof(new_filename));
+                    memory__copy(new_filename, logger->filename, array_count(logger->filename) - 1);
+                    memory__copy(new_filename + array_count(logger->filename) - 1, ".1", 2);
+
+                    int rename_result = rename(logger->filename, new_filename);
+                    if (rename_result < 0)
+                    {
+                        fprintf(stderr, "Could not rename logger file to rotate (errno : %d - \"%s\")\n", errno, strerror(errno));
+                    }
                 }
             }
         }
-    }
 
-    int fd = open(filename, O_CREAT | O_APPEND | O_RDWR, 0666);
-    if (fd < 0)
-    {
-        fprintf(stderr, "Could not open log file (errno: %d - \"%s\")\n", errno, strerror(errno));
+        int fd = open(logger->filename, O_CREAT | O_APPEND | O_RDWR, 0666);
+        if (fd < 0)
+        {
+            fprintf(stderr, "Could not open log file (errno: %d - \"%s\")\n", errno, strerror(errno));
+        }
+        else
+        {
+            memory_block string_to_write = string_builder__get_string(&logger->sb);
+            isize bytes_written = write(fd, string_to_write.memory, string_to_write.size);
+            if (bytes_written < 0)
+            {
+                fprintf(stderr, "Error write logger file (errno: %d - \"%s\")\n", errno, strerror(errno));
+            }
+            string_builder__reset(&logger->sb);
+            close(fd);
+        }
     }
-    else
+}
+
+void logger__log(struct logger *logger,
+                 struct code_location cl,
+                 char const *fmt, ...)
+{
+    // @todo: make 2 independent settings: send to stream / file
+    //                                     print [filename:line] / print [date time]
+    va_list args;
+    va_start(args, fmt);
+    if (logger->type == LOGGER__STREAM)
     {
-        logger__flush_file(logger, fd);
-        close(fd);
+        dprintf(logger->fd, "[%s:%d] ", cl.filename, cl.line);
+        vdprintf(logger->fd, fmt, args);
+        dprintf(logger->fd, "\n");
     }
+    else if (logger->type == LOGGER__FILE)
+    {
+        time_t t = time(NULL);
+        struct tm tm = *localtime(&t);
+        string_builder__append_format(&logger->sb, "[%d-%02d-%02d %02d:%02d:%02d] ",
+            tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+        string_builder__append_format_va_list(&logger->sb, fmt, args);
+        string_builder__append_format(&logger->sb, "\n");
+        logger__flush(logger);
+    }
+    va_end(args);
 }
