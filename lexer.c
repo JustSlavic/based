@@ -16,9 +16,9 @@ struct lexer make_lexer(memory_block buffer)
 char get_char(struct lexer *lexer)
 {
     char c = 0;
-    if (lexer->cursor < lexer->buffer_size)
+    if (lexer->cursor < lexer->buffer.size)
     {
-        c = lexer->buffer[lexer->cursor];
+        c = lexer->buffer.memory[lexer->cursor];
     }
     return c;
 }
@@ -45,7 +45,7 @@ char eat_char(struct lexer *lexer)
     return c;
 }
 
-bool eat_cstring(struct lexer *lexer, char const *str);
+bool eat_cstring(struct lexer *lexer, char const *str)
 {
     usize saved_cursor = 0;
     while (*str != 0)
