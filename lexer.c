@@ -45,6 +45,12 @@ char eat_char(struct lexer *lexer)
     return c;
 }
 
+char *get_pointer(struct lexer *lexer)
+{
+    char *result = (char *) (lexer->buffer.memory + lexer->cursor);
+    return result;
+}
+
 bool eat_cstring(struct lexer *lexer, char const *str)
 {
     usize saved_cursor = 0;
@@ -106,3 +112,10 @@ int consume_until(struct lexer *lexer, bool32 (*predicate)(char))
     return count;
 }
 
+
+FORCE_INLINE bool32 is_ascii_space(char c) { return (c == ' '); }
+FORCE_INLINE bool32 is_ascii_whitespace(char c) { return (c == ' ') || (c == '\t') || (c == '\r') || (c == '\n'); }
+FORCE_INLINE bool32 is_ascii_alpha(char c) { return ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z')); }
+FORCE_INLINE bool32 is_ascii_digit(char c) { return (c >= '0') && (c <= '9'); }
+FORCE_INLINE bool32 is_valid_identifier_head(char c) { return (c == '_') || is_ascii_alpha(c); }
+FORCE_INLINE bool32 is_valid_identifier_body(char c) { return (c == '_') || is_ascii_alpha(c) || is_ascii_digit(c); }
