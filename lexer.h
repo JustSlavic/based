@@ -19,6 +19,7 @@ struct lexer make_lexer(memory_block buffer);
 
 char get_char(struct lexer *);
 char eat_char(struct lexer *);
+int32 eat_newline(struct lexer *);
 
 char *get_pointer(struct lexer *);
 

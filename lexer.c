@@ -45,6 +45,24 @@ char eat_char(struct lexer *lexer)
     return c;
 }
 
+int32 eat_newline(struct lexer *lexer)
+{
+    int32 result = 0;
+    char r = get_char(lexer);
+    if (r == '\r')
+    {
+        eat_char(lexer);
+        result += 1;
+    }
+    char n = get_char(lexer);
+    if (n == '\n')
+    {
+        eat_char(lexer);
+        result += 1;
+    }
+    return result;
+}
+
 char *get_pointer(struct lexer *lexer)
 {
     char *result = (char *) (lexer->buffer.memory + lexer->cursor);
@@ -103,7 +121,7 @@ int consume_until(struct lexer *lexer, bool32 (*predicate)(char))
 {
     int count = 0;
     char c = get_char(lexer);
-    while (!predicate(c))
+    while (c != 0 && !predicate(c))
     {
         eat_char(lexer);
         count += 1;
