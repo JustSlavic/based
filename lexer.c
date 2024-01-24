@@ -110,7 +110,7 @@ int consume_while(struct lexer *lexer, bool32 (*predicate)(char))
 {
     int count = 0;
     char c = get_char(lexer);
-    while (predicate(c))
+    while (c > 0 && predicate(c))
     {
         eat_char(lexer);
         count += 1;
@@ -123,7 +123,7 @@ int consume_until(struct lexer *lexer, bool32 (*predicate)(char))
 {
     int count = 0;
     char c = get_char(lexer);
-    while (c <= 0 && !predicate(c))
+    while (c > 0 && !predicate(c))
     {
         eat_char(lexer);
         count += 1;
