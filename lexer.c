@@ -19,43 +19,45 @@ char get_char(struct lexer *lexer)
     if (lexer->cursor < lexer->buffer.size)
     {
         c = lexer->buffer.memory[lexer->cursor];
+        if (c <= 0) c = 0;
     }
     return c;
 }
 
 char eat_char(struct lexer *lexer)
 {
-    char c = get_char(lexer);
-    if (c > 0)
+    char c1 = get_char(lexer);
+    if (c1 > 0)
     {
         lexer->cursor += 1;
         lexer->column += 1;
 
-        if (c == '\n' || c == '\r')
+        if (c1 == '\r' || c1 == '\n')
         {
             lexer->column = 1;
             lexer->line += 1;
+
             char c2 = get_char(lexer);
-            if ((c == '\n' && c2 == '\r') || (c == '\r' && c2 == '\n'))
+            if (c1 == '\r' && c2 == '\n')
             {
                 lexer->cursor += 1;
             }
+
+            c1 = '\n'; // @note: In case if I want to check it outside
         }
     }
-    return c;
+    return c1;
 }
 
 int32 eat_newline(struct lexer *lexer)
 {
     int32 result = 0;
-    char r = get_char(lexer);
-    if (r == '\r')
+    if (get_char(lexer) == '\r')
     {
         eat_char(lexer);
         result += 1;
     }
-    char n = get_char(lexer);
-    if (n == '\n')
+    if (get_char(lexer) == '\n')
     {
         eat_char(lexer);
         result += 1;
@@ -121,7 +123,7 @@ int consume_until(struct lexer *lexer, bool32 (*predicate)(char))
 {
     int count = 0;
     char c = get_char(lexer);
-    while (c != 0 && !predicate(c))
+    while (c <= 0 && !predicate(c))
     {
         eat_char(lexer);
         count += 1;
