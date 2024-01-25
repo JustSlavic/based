@@ -22,8 +22,9 @@ struct acf
         string_view string_;
         struct
         {
-            acf *values[32];
+            struct acf *vals[32];
             string_view keys[32];
+            uint32      pair_count;
         };
     };
 };
@@ -152,11 +153,14 @@ acf__token acf__get_token(acf__lexer *lexer)
             if (eat_cstring(&lexer->l, "null"))
             {
                 result.kind = ACF_TOKEN__NULL;
+                result.span.data = (char *) (lexer->l.buffer.memory + lexer->l.cursor - 4);
+                result.span.size = 4;
             }
             else
             {
                 result.kind = ACF_TOKEN__IDENTIFIER;
-                consume_while(&lexer->l, is_valid_identifier_body);
+                result.span.data = (char *) (lexer->l.buffer.memory + lexer->l.cursor);
+                result.span.size = consume_while(&lexer->l, is_valid_identifier_body);
             }
         }
         else if (is_ascii_digit(c))
@@ -177,6 +181,9 @@ acf__token acf__get_token(acf__lexer *lexer)
             result.kind = (enum acf_token__kind) c;
             eat_char(&lexer->l);
         }
+
+        lexer->current_token = result;
+        lexer->current_token_ok = true;
     }
 
     return result;
@@ -204,13 +211,18 @@ acf *acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
     if (t.kind == ACF_TOKEN__NULL)
     {
         result = ALLOCATE(lexer->a, acf);
-        if (result) result->kind = ACF__NULL;
+        if (result)
+        {
+            acf__eat_token(lexer);
+            result->kind = ACF__NULL;
+        }
     }
     else if (t.kind == ACF_TOKEN__TRUE || t.kind == ACF_TOKEN__FALSE)
     {
         result = ALLOCATE(lexer->a, acf);
         if (result)
         {
+            acf__eat_token(lexer);
             result->kind = ACF__BOOL;
             result->boolean = ACF_TOKEN__TRUE ? true : false;
         }
@@ -220,6 +232,7 @@ acf *acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
         result = ALLOCATE(lexer->a, acf);
         if (result)
         {
+            acf__eat_token(lexer);
             result->kind = ACF__INT;
             result->integer = t.integer;
         }
@@ -227,12 +240,14 @@ acf *acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
     else if ((t.kind == '{') || (t.kind == ACF_TOKEN__IDENTIFIER))
     {
         bool32 ok = false;
+        bool32 ate_open_brace = false;
         if (t.kind == '{')
         {
             acf__eat_token(lexer);
             ok = true;
+            ate_open_brace = true;
         }
-        else
+        else // t.kind == ACF_TOKEN__IDENTIFIER
         {
             ok = is_top_level;
         }
@@ -240,6 +255,60 @@ acf *acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
         if (ok)
         {
             // Parse kv pairs
+            result = ALLOCATE(lexer->a, acf);
+            result->kind = ACF__OBJECT;
+
+            if (result)
+            {
+                while (result->pair_count < ARRAY_COUNT(result->keys))
+                {
+                    acf__token id = acf__get_token(lexer);
+                    if (id.kind != ACF_TOKEN__IDENTIFIER) { break; };
+
+                    string_view k;
+                    acf *v = acf__parse_kv(lexer, &k);
+                    if (v)
+                    {
+                        result->keys[result->pair_count] = k;
+                        result->vals[result->pair_count] = v;
+                        result->pair_count += 1;
+
+                        acf__token semicolon = acf__get_token(lexer);
+                        if (semicolon.kind == ';')
+                        {
+                            acf__eat_token(lexer);
+                        }
+                        else if (semicolon.kind == '}')
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                acf__token brace = acf__get_token(lexer);
+                if (brace.kind == '}')
+                {
+                    if (ate_open_brace)
+                    {
+                        acf__eat_token(lexer);
+                    }
+                    else
+                    {
+                        // Report error
+                    }
+                }
+                else
+                {
+                    if (ate_open_brace)
+                    {
+                        // Report error
+                    }
+                }
+            }
         }
         else
         {
@@ -261,9 +330,11 @@ acf *acf__parse_kv(acf__lexer *lexer, string_view *k)
     acf__token id = acf__get_token(lexer);
     if (id.kind == ACF_TOKEN__IDENTIFIER)
     {
+        acf__eat_token(lexer);
         acf__token eq = acf__get_token(lexer);
         if (eq.kind == '=')
         {
+            acf__eat_token(lexer);
             result = acf__parse_value(lexer, false);
             if (result && k)
             {
@@ -282,8 +353,50 @@ acf *acf__parse(memory_allocator a, memory_block buffer)
         .l = make_lexer(buffer),
         .current_token_ok = false,
     };
-    string_view k;
-    result = acf__parse_kv(&lexer, &k);
+    result = acf__parse_value(&lexer, true);
 
+    return result;
+}
+
+acf__object_iterator acf__get_pairs(acf *t)
+{
+    acf__object_iterator result = {
+        .object = t,
+        .index = 0,
+        .count = t->pair_count,
+    };
+    return result;
+}
+
+bool32 acf__next_pair(acf__object_iterator *it)
+{
+    bool32 result = false;
+    if (it->index < it->count)
+    {
+        it->index += 1;
+        result = true;
+    }
+    return result;
+}
+
+bool32 acf__get_key(acf__object_iterator *it, string_view *k)
+{
+    bool32 result = false;
+    if (it->index < it->count)
+    {
+        *k = it->object->keys[it->index];
+        result = true;
+    }
+    return result;
+}
+
+bool32 acf__get_val(acf__object_iterator *it, acf **v)
+{
+    bool32 result = false;
+    if (it->index < it->count)
+    {
+        *v = it->object->vals[it->index];
+        result = true;
+    }
     return result;
 }

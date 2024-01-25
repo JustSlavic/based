@@ -73,7 +73,7 @@ char *get_pointer(struct lexer *lexer)
 
 bool eat_cstring(struct lexer *lexer, char const *str)
 {
-    usize saved_cursor = 0;
+    usize saved_cursor = lexer->cursor;
     while (*str != 0)
     {
         char c = get_char(lexer);
