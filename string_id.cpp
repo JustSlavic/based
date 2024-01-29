@@ -43,7 +43,7 @@ string_id string_id__from_buffer(char const *buffer, usize size)
     uint64 hash = string_id__hash(buffer, size);
 
     int32 index = -1;
-    for (int offset = 0; offset < ARRAY_COUNT(string_id__storage_instance.table); offset++)
+    for (usize offset = 0; offset < ARRAY_COUNT(string_id__storage_instance.table); offset++)
     {
         uint64 i = (hash + offset) % ARRAY_COUNT(string_id__storage_instance.table);
         if ((string_id__storage_instance.hashes[i] == 0) ||
