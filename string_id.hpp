@@ -2,6 +2,7 @@
 #define BASED__STRING_ID_H
 
 #include <base.h>
+#include <string_view.hpp>
 
 
 struct string_id

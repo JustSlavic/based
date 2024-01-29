@@ -224,9 +224,7 @@ acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
                     acf::key_value_pair p = acf__parse_kv(lexer);
                     if (p.value.is_valid())
                     {
-                        result.impl->object->keys[result.impl->object->count] = p.key;
-                        result.impl->object->vals[result.impl->object->count] = p.value.impl;
-                        result.impl->object->count += 1;
+                        result.push(p.key, p.value);
 
                         acf__token semicolon = acf__get_token(lexer);
                         if (semicolon.kind == ';')
@@ -331,6 +329,31 @@ int64       acf::get_integer()  { return (is_integer() ? impl->integer : 0); }
 float64     acf::get_floating() { return (is_floating() ? impl->floating : 0.0); }
 string_view acf::get_string()   { return (is_string() ? impl->string : string_view{}); }
 
+bool32      acf::get_bool(bool32 default_value)        { return (is_bool() ? impl->boolean : default_value); }
+int64       acf::get_integer(int64 default_value)      { return (is_integer() ? impl->integer : default_value); }
+float64     acf::get_floating(float64 default_value)   { return (is_floating() ? impl->floating : default_value); }
+string_view acf::get_string(char const *default_value) { return (is_string() ? impl->string : string_view{ default_value, cstring__size_no0(default_value) }); }
+
+acf acf::get_value(char const *cstr) { return get_value(string_id::from(cstr)); }
+acf acf::get_value(key_t k)
+{
+    acf result = {};
+    if (is_object())
+    {
+        for (int i = 0; i < ARRAY_COUNT(impl->object->keys); i++)
+        {
+            if (impl->object->keys[i] == k)
+            {
+                result = acf{ impl->object->vals[i] };
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+
+
 uint32 acf::get_size()
 {
     if (!is_valid()) return 0;
@@ -387,10 +410,14 @@ void acf::set_object()
     }
 }
 
-void acf::push_key_value_pair(string_id k, acf v)
+void acf::push(string_id k, acf v)
 {
-    if (is_object() && impl->object)
+    if (is_object())
     {
+        auto index = impl->object->count;
+        impl->object->keys[index] = k;
+        impl->object->vals[index] = v.impl;
+        impl->object->count += 1;
     }
 }
 

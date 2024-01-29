@@ -29,6 +29,12 @@ struct acf
     int64       get_integer();
     float64     get_floating();
     string_view get_string();
+    bool32      get_bool(bool32 default_value);
+    int64       get_integer(int64 default_value);
+    float64     get_floating(float64 default_value);
+    string_view get_string(char const *default_value);
+    acf         get_value(char const *cstr);
+    acf         get_value(key_t k);
 
     uint32 get_size();
 
@@ -39,7 +45,7 @@ struct acf
     void set_string(string_view value);
     void set_object();
 
-    void push_key_value_pair(key_t k, val_t v);
+    void push(key_t k, val_t v);
 
     struct key_value_pair;
     struct pair_iterator;
