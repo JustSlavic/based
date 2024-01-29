@@ -104,6 +104,18 @@ acf__token acf__get_token(acf__lexer *lexer)
                 result.span.data = get_pointer(&lexer->l) - 4;
                 result.span.size = 4;
             }
+            else if (eat_cstring(&lexer->l, "true"))
+            {
+                result.kind = ACF_TOKEN__TRUE;
+                result.span.data = get_pointer(&lexer->l) - 4;
+                result.span.size = 4;
+            }
+            else if (eat_cstring(&lexer->l, "false"))
+            {
+                result.kind = ACF_TOKEN__FALSE;
+                result.span.data = get_pointer(&lexer->l) - 5;
+                result.span.size = 5;
+            }
             else
             {
                 result.kind = ACF_TOKEN__IDENTIFIER;

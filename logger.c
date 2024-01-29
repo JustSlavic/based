@@ -12,12 +12,16 @@
 
 void logger__flush(struct logger *logger)
 {
-    if (logger->type == LOGGER__FILE)
+    if (logger__is(logger, LOGGER__FILE))
     {
+        char filename[512] = {};
+        memory__copy(filename, logger->filename.data, logger->filename.size);
+
         if (logger->rotate_size > 0)
         {
+
             struct stat st;
-            int fstat_result = stat(logger->filename, &st);
+            int fstat_result = stat(filename, &st);
             if (fstat_result < 0)
             {
                 if (errno != ENOENT)
@@ -29,12 +33,12 @@ void logger__flush(struct logger *logger)
             {
                 if (st.st_size > logger->rotate_size)
                 {
-                    char new_filename[512];
-                    memory__set(new_filename, 0, sizeof(new_filename));
-                    memory__copy(new_filename, logger->filename, array_count(logger->filename) - 1);
-                    memory__copy(new_filename + array_count(logger->filename) - 1, ".1", 2);
+                    char new_filename[512] = {};
+                    memory__copy(new_filename, logger->filename.data, logger->filename.size);
+                    new_filename[logger->filename.size] = '.';
+                    new_filename[logger->filename.size + 1] = '1';
 
-                    int rename_result = rename(logger->filename, new_filename);
+                    int rename_result = rename(filename, new_filename);
                     if (rename_result < 0)
                     {
                         fprintf(stderr, "Could not rename logger file to rotate (errno : %d - \"%s\")\n", errno, strerror(errno));
@@ -43,7 +47,7 @@ void logger__flush(struct logger *logger)
             }
         }
 
-        int fd = open(logger->filename, O_CREAT | O_APPEND | O_RDWR, 0666);
+        int fd = open(filename, O_CREAT | O_APPEND | O_RDWR, 0666);
         if (fd < 0)
         {
             fprintf(stderr, "Could not open log file (errno: %d - \"%s\")\n", errno, strerror(errno));
@@ -70,13 +74,13 @@ void logger__log(struct logger *logger,
     //                                     print [filename:line] / print [date time]
     va_list args;
     va_start(args, fmt);
-    if (logger->type == LOGGER__STREAM)
+    if (logger__is(logger, LOGGER__STREAM))
     {
         dprintf(logger->fd, "[%s:%d] ", cl.filename, cl.line);
         vdprintf(logger->fd, fmt, args);
         dprintf(logger->fd, "\n");
     }
-    else if (logger->type == LOGGER__FILE)
+    if (logger__is(logger, LOGGER__FILE))
     {
         time_t t = time(NULL);
         struct tm tm = *localtime(&t);
@@ -88,3 +92,9 @@ void logger__log(struct logger *logger,
     }
     va_end(args);
 }
+
+bool logger__is(struct logger *logger, logger_type type)
+{
+    return (logger->type & type) > 0;
+}
+
