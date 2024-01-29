@@ -25,7 +25,7 @@ struct logger
         struct
         {
             array(char) filename;
-            usize rotate_size;
+            isize rotate_size;
         };
     };
 };
