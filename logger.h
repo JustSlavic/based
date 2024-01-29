@@ -2,20 +2,23 @@
 #define LOGGER_H
 
 #include "base.h"
-#include "string_builder.h"
+#include "string_builder.hpp"
 #include "code_location.h"
 #include "array.h"
 
 
+enum logger_type
+{
+    LOGGER__NONE,
+    LOGGER__STREAM,
+    LOGGER__FILE,
+};
+
 struct logger
 {
     string_builder sb;
-    enum
-    {
-        LOGGER__NONE,
-        LOGGER__STREAM,
-        LOGGER__FILE,
-    } type;
+    
+    logger_type type;
     union
     {
         int fd;

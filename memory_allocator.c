@@ -44,8 +44,8 @@ typedef struct memory_mallocator {
 static memory_mallocator mallocator_instance;
 
 memory_allocator mallocator();
-memory_block     mallocator_allocate_  (memory_allocator a, usize size, usize alignment);
-void             mallocator_deallocate (memory_allocator a, memory_block);
+memory_block     mallocator__allocate_  (memory_allocator a, usize size, usize alignment);
+void             mallocator__deallocate (memory_allocator a, memory_block);
 
 
 memory_block memory_allocator__allocate_(memory_allocator a, usize size, usize alignment);
@@ -132,18 +132,19 @@ void memory_arena__reset(memory_allocator a)
 
 memory_allocator mallocator()
 {
+    mallocator_instance.type = MEMORY_ALLOCATOR_MALLOC;
     return (memory_allocator) &mallocator_instance;
 }
 
-memory_block mallocator_allocate_(memory_allocator a, usize size, usize alignment)
+memory_block mallocator__allocate_(memory_allocator a, usize size, usize alignment)
 {
     memory_block result;
-    result.memory = malloc(size);
+    result.memory = (byte *) malloc(size);
     result.size   = size;
     return result;
 }
 
-void mallocator_deallocate(memory_allocator a, memory_block block)
+void mallocator__deallocate(memory_allocator a, memory_block block)
 {
     memory_allocator_type type = *(memory_allocator_type *) a;
     if (type == MEMORY_ALLOCATOR_MALLOC)
@@ -163,6 +164,9 @@ struct memory_block memory_allocator__allocate_(memory_allocator a, usize size, 
     {
         case MEMORY_ALLOCATOR_ARENA:
             result = memory_arena__allocate_(a, size, alignment);
+            break;
+        case MEMORY_ALLOCATOR_MALLOC:
+            result = mallocator__allocate_(a, size, alignment);
             break;
         case MEMORY_ALLOCATOR_STACK:
         case MEMORY_ALLOCATOR_POOL:
@@ -197,7 +201,7 @@ void memory_allocator__deallocate(memory_allocator a, memory_block block)
             ASSERT_FAIL();
             break;
         case MEMORY_ALLOCATOR_MALLOC:
-            mallocator_deallocate(a, block);
+            mallocator__deallocate(a, block);
             break;
         default:
             ASSERT_FAIL();

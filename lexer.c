@@ -139,3 +139,4 @@ FORCE_INLINE bool32 is_ascii_alpha(char c) { return ((c >= 'A') && (c <= 'Z')) |
 FORCE_INLINE bool32 is_ascii_digit(char c) { return (c >= '0') && (c <= '9'); }
 FORCE_INLINE bool32 is_valid_identifier_head(char c) { return (c == '_') || is_ascii_alpha(c); }
 FORCE_INLINE bool32 is_valid_identifier_body(char c) { return (c == '_') || is_ascii_alpha(c) || is_ascii_digit(c); }
+FORCE_INLINE bool32 is_ascii_double_quote(char c) { return (c == '"'); }

@@ -3,7 +3,7 @@
 
 #include "base.h"
 #include "memory.h"
-#include "string_view.h"
+#include "string_view.hpp"
 
 
 struct lexer
@@ -37,6 +37,7 @@ bool32 is_ascii_alpha(char c);
 bool32 is_ascii_digit(char c);
 bool32 is_valid_identifier_head(char c);
 bool32 is_valid_identifier_body(char c);
+bool32 is_ascii_double_quote(char c);
 
 
 #endif // BASED__LEXER_H

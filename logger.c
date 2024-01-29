@@ -50,13 +50,13 @@ void logger__flush(struct logger *logger)
         }
         else
         {
-            memory_block string_to_write = string_builder__get_string(&logger->sb);
+            memory_block string_to_write = logger->sb.get_string();
             isize bytes_written = write(fd, string_to_write.memory, string_to_write.size);
             if (bytes_written < 0)
             {
                 fprintf(stderr, "Error write logger file (errno: %d - \"%s\")\n", errno, strerror(errno));
             }
-            string_builder__reset(&logger->sb);
+            logger->sb.reset();
             close(fd);
         }
     }
@@ -80,10 +80,10 @@ void logger__log(struct logger *logger,
     {
         time_t t = time(NULL);
         struct tm tm = *localtime(&t);
-        string_builder__append_format(&logger->sb, "[%d-%02d-%02d %02d:%02d:%02d] ",
+        logger->sb.append("[%d-%02d-%02d %02d:%02d:%02d] ",
             tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-        string_builder__append_format_va_list(&logger->sb, fmt, args);
-        string_builder__append_format(&logger->sb, "\n");
+        logger->sb.append(fmt, args);
+        logger->sb.append("\n");
         logger__flush(logger);
     }
     va_end(args);

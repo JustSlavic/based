@@ -1,96 +1,43 @@
-#include "acf.h"
+#include "acf.hpp"
 #include "lexer.h"
 
+// ====== impl ======
 
-struct acf
+enum acf_kind
 {
-    enum
-    {
-        ACF__NULL,
-        ACF__BOOL,
-        ACF__INT,
-        ACF__FLOAT,
-        ACF__STRING,
-        ACF__OBJECT,
-        ACF__LIST,
-    } kind;
+    ACF_INVALID,
+
+    ACF_NULL,
+    ACF_BOOL,
+    ACF_INT,
+    ACF_FLOAT,
+    ACF_STRING,
+    ACF_OBJECT,
+    ACF_LIST,
+};
+
+struct acf_object
+{
+    acf_impl *vals[32];
+    string_id keys[32];
+    uint32 count;
+};
+
+struct acf_impl
+{
+    acf_kind kind;
     union
     {
         bool32      boolean;
         float64     floating;
         int64       integer;
-        string_view string_;
-        struct
-        {
-            struct acf *vals[32];
-            string_view keys[32];
-            uint32      pair_count;
-        };
+        string_view string;
+        acf_object *object;
     };
 };
-typedef struct acf acf;
 
-bool32 acf__is_null(acf *t)
-{
-    bool32 result = (t && t->kind == ACF__NULL);
-    return result;
-}
 
-bool32 acf__is_bool(acf *t)
-{
-    bool32 result = (t && t->kind == ACF__BOOL);
-    return result;
-}
 
-bool32 acf__is_integer(acf *t)
-{
-    bool32 result = (t && t->kind == ACF__INT);
-    return result;
-}
-
-bool32 acf__is_floating(acf *t)
-{
-    bool32 result = (t && t->kind == ACF__FLOAT);
-    return result;
-}
-
-bool32 acf__is_string(acf *t)
-{
-    bool32 result = (t && t->kind == ACF__STRING);
-    return result;
-}
-
-bool32 acf__is_object(acf *t)
-{
-    bool32 result = (t && t->kind == ACF__OBJECT);
-    return result;
-}
-
-bool32 acf__is_list(acf *t)
-{
-    bool32 result = (t && t->kind == ACF__LIST);
-    return result;
-}
-
-bool32 acf__get_bool(acf *t)
-{
-    bool32 result = 0;
-    if (acf__is_bool(t))
-    {
-        result = t->boolean;
-    }
-    return result;
-}
-
-int64 acf__get_integer(acf *t)
-{
-    int64 result = 0;
-    if (acf__is_integer(t))
-    {
-        result = t->integer;
-    }
-    return result;
-}
 
 
 enum acf_token__kind
@@ -110,6 +57,7 @@ enum acf_token__kind
     ACF_TOKEN__TRUE,
     ACF_TOKEN__FALSE,
     ACF_TOKEN__NUMLIT,
+    ACF_TOKEN__STRING,
 };
 typedef enum acf_token__kind acf_token__kind;
 
@@ -141,7 +89,7 @@ acf__token acf__get_token(acf__lexer *lexer)
     }
     else
     {
-        consume_while(&lexer->l, is_ascii_space);
+        consume_while(&lexer->l, is_ascii_whitespace);
 
         char c = get_char(&lexer->l);
         if (c == 0)
@@ -153,13 +101,13 @@ acf__token acf__get_token(acf__lexer *lexer)
             if (eat_cstring(&lexer->l, "null"))
             {
                 result.kind = ACF_TOKEN__NULL;
-                result.span.data = (char *) (lexer->l.buffer.memory + lexer->l.cursor - 4);
+                result.span.data = get_pointer(&lexer->l) - 4;
                 result.span.size = 4;
             }
             else
             {
                 result.kind = ACF_TOKEN__IDENTIFIER;
-                result.span.data = (char *) (lexer->l.buffer.memory + lexer->l.cursor);
+                result.span.data = get_pointer(&lexer->l);
                 result.span.size = consume_while(&lexer->l, is_valid_identifier_body);
             }
         }
@@ -175,6 +123,14 @@ acf__token acf__get_token(acf__lexer *lexer)
             }
             result.kind = ACF_TOKEN__NUMLIT;
             result.integer = integral_part;
+        }
+        else if (c == '"')
+        {
+            eat_char(&lexer->l);
+            result.kind = ACF_TOKEN__STRING;
+            result.span.data = get_pointer(&lexer->l);
+            result.span.size = consume_until(&lexer->l, is_ascii_double_quote);
+            eat_char(&lexer->l);
         }
         else
         {
@@ -200,42 +156,41 @@ acf__token acf__eat_token(acf__lexer *lexer)
 // acf__parse_kv    (identifier '=' value ';'?)
 // acf__parse       (kv pairs => object | comma separated values => list (if one value => return it))
 
-acf *acf__parse_value(acf__lexer *lexer, bool32 is_top_level);
-acf *acf__parse_kv(acf__lexer *lexer, string_view *k);
+acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level);
+acf::key_value_pair acf__parse_kv(acf__lexer *lexer);
 
-acf *acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
+acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
 {
-    acf *result = NULL;
+    acf result = { NULL };
 
     acf__token t = acf__get_token(lexer);
     if (t.kind == ACF_TOKEN__NULL)
     {
-        result = ALLOCATE(lexer->a, acf);
-        if (result)
-        {
-            acf__eat_token(lexer);
-            result->kind = ACF__NULL;
-        }
+        acf__eat_token(lexer);
+
+        result = { ALLOCATE(lexer->a, acf_impl) };
+        result.set_null();
     }
     else if (t.kind == ACF_TOKEN__TRUE || t.kind == ACF_TOKEN__FALSE)
     {
-        result = ALLOCATE(lexer->a, acf);
-        if (result)
-        {
-            acf__eat_token(lexer);
-            result->kind = ACF__BOOL;
-            result->boolean = ACF_TOKEN__TRUE ? true : false;
-        }
+        acf__eat_token(lexer);
+
+        result = { ALLOCATE(lexer->a, acf_impl) };
+        result.set_bool(ACF_TOKEN__TRUE ? true : false);
     }
     else if (t.kind == ACF_TOKEN__NUMLIT)
     {
-        result = ALLOCATE(lexer->a, acf);
-        if (result)
-        {
-            acf__eat_token(lexer);
-            result->kind = ACF__INT;
-            result->integer = t.integer;
-        }
+        acf__eat_token(lexer);
+
+        result = { ALLOCATE(lexer->a, acf_impl) };
+        result.set_integer(t.integer);
+    }
+    else if (t.kind == ACF_TOKEN__STRING)
+    {
+        acf__eat_token(lexer);
+
+        result = { ALLOCATE(lexer->a, acf_impl) };
+        result.set_string(t.span);
     }
     else if ((t.kind == '{') || (t.kind == ACF_TOKEN__IDENTIFIER))
     {
@@ -254,24 +209,24 @@ acf *acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
 
         if (ok)
         {
-            // Parse kv pairs
-            result = ALLOCATE(lexer->a, acf);
-            result->kind = ACF__OBJECT;
+            result = { ALLOCATE(lexer->a, acf_impl) };
+            result.set_object();
 
-            if (result)
+            result.impl->object = ALLOCATE(lexer->a, acf_object);
+
+            if (result.is_valid())
             {
-                while (result->pair_count < ARRAY_COUNT(result->keys))
+                while (result.get_size() < ARRAY_COUNT(result.impl->object->keys))
                 {
                     acf__token id = acf__get_token(lexer);
                     if (id.kind != ACF_TOKEN__IDENTIFIER) { break; };
 
-                    string_view k;
-                    acf *v = acf__parse_kv(lexer, &k);
-                    if (v)
+                    acf::key_value_pair p = acf__parse_kv(lexer);
+                    if (p.value.is_valid())
                     {
-                        result->keys[result->pair_count] = k;
-                        result->vals[result->pair_count] = v;
-                        result->pair_count += 1;
+                        result.impl->object->keys[result.impl->object->count] = p.key;
+                        result.impl->object->vals[result.impl->object->count] = p.value.impl;
+                        result.impl->object->count += 1;
 
                         acf__token semicolon = acf__get_token(lexer);
                         if (semicolon.kind == ';')
@@ -324,9 +279,9 @@ acf *acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
     return result;
 }
 
-acf *acf__parse_kv(acf__lexer *lexer, string_view *k)
+acf::key_value_pair acf__parse_kv(acf__lexer *lexer)
 {
-    acf *result = NULL;
+    acf::key_value_pair result = {};
     acf__token id = acf__get_token(lexer);
     if (id.kind == ACF_TOKEN__IDENTIFIER)
     {
@@ -335,68 +290,124 @@ acf *acf__parse_kv(acf__lexer *lexer, string_view *k)
         if (eq.kind == '=')
         {
             acf__eat_token(lexer);
-            result = acf__parse_value(lexer, false);
-            if (result && k)
+            acf value = acf__parse_value(lexer, false);
+            if (value.is_valid())
             {
-                *k = id.span;
+                result.key = string_id::from(id.span);
+                result.value = value;
             }
         }
     }
     return result;
 }
 
-acf *acf__parse(memory_allocator a, memory_block buffer)
+acf acf::parse(memory_allocator a, memory_block buffer)
 {
-    acf *result = NULL;
-    acf__lexer lexer = {
-        .a = a,
-        .l = make_lexer(buffer),
-        .current_token_ok = false,
-    };
+    acf result = {};
+    acf__lexer lexer;
+    lexer.a = a;
+    lexer.l = make_lexer(buffer);
+    lexer.current_token_ok = false;
     result = acf__parse_value(&lexer, true);
 
     return result;
 }
 
-acf__object_iterator acf__get_pairs(acf *t)
+
+// ==================== public interface ==================== //
+
+bool32 acf::is_valid()    { return (impl && impl->kind != ACF_INVALID); }
+
+bool32 acf::is_null()     { return (impl && impl->kind == ACF_NULL); }
+bool32 acf::is_bool()     { return (impl && impl->kind == ACF_BOOL); }
+bool32 acf::is_integer()  { return (impl && impl->kind == ACF_INT); }
+bool32 acf::is_floating() { return (impl && impl->kind == ACF_FLOAT); }
+bool32 acf::is_string()   { return (impl && impl->kind == ACF_STRING); }
+bool32 acf::is_object()   { return (impl && impl->kind == ACF_OBJECT && impl->object != NULL); }
+bool32 acf::is_list()     { return (impl && impl->kind == ACF_LIST); }
+
+bool32      acf::get_bool()     { return (is_bool() ? impl->boolean : false); }
+int64       acf::get_integer()  { return (is_integer() ? impl->integer : 0); }
+float64     acf::get_floating() { return (is_floating() ? impl->floating : 0.0); }
+string_view acf::get_string()   { return (is_string() ? impl->string : string_view{}); }
+
+uint32 acf::get_size()
 {
-    acf__object_iterator result = {
-        .object = t,
-        .index = 0,
-        .count = t->pair_count,
-    };
-    return result;
+    if (!is_valid()) return 0;
+    if (is_object()) return impl->object->count;
+    else return 1;
 }
 
-bool32 acf__next_pair(acf__object_iterator *it)
+void acf::set_null()
 {
-    bool32 result = false;
-    if (it->index < it->count)
+    if (!is_valid()) { impl->kind = ACF_NULL; }
+}
+
+void acf::set_bool(bool32 value)
+{
+    if (is_bool() || !is_valid())
     {
-        it->index += 1;
-        result = true;
+        impl->kind = ACF_BOOL;
+        impl->boolean = value;
+    }
+}
+
+void acf::set_integer(int64 value)
+{
+    if (is_integer() || !is_valid())
+    {
+        impl->kind = ACF_INT,
+        impl->integer = value;
+    }
+}
+
+void acf::set_floating(float64 value)
+{
+    if (is_floating() || !is_valid())
+    {
+        impl->kind = ACF_FLOAT,
+        impl->floating = value;
+    }
+}
+
+void acf::set_string(string_view value)
+{
+    if (is_string() || !is_valid())
+    {
+        impl->kind = ACF_STRING,
+        impl->string = value;
+    }
+}
+
+void acf::set_object()
+{
+    if (is_object() || !is_valid())
+    {
+        impl->kind = ACF_OBJECT;
+    }
+}
+
+void acf::push_key_value_pair(string_id k, acf v)
+{
+    if (is_object() && impl->object)
+    {
+    }
+}
+
+acf::key_value_pair acf::pair_iterator::operator * () const
+{
+    key_value_pair result = {};
+    if ((acf{ impl }).is_object())
+    {
+        if (index < impl->object->count)
+        {
+            result.key = impl->object->keys[index];
+            result.value = acf{ impl->object->vals[index] };
+        }
     }
     return result;
 }
 
-bool32 acf__get_key(acf__object_iterator *it, string_view *k)
-{
-    bool32 result = false;
-    if (it->index < it->count)
-    {
-        *k = it->object->keys[it->index];
-        result = true;
-    }
-    return result;
-}
+// acf::key_t acf::pair_iterator::key() const;
+// acf::val_t acf::pair_iterator::value() const;
 
-bool32 acf__get_val(acf__object_iterator *it, acf **v)
-{
-    bool32 result = false;
-    if (it->index < it->count)
-    {
-        *v = it->object->vals[it->index];
-        result = true;
-    }
-    return result;
-}

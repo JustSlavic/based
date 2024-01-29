@@ -9,8 +9,21 @@ struct memory_block
     byte *memory;
     usize size;
 };
-typedef struct memory_block memory_block;
 
+FORCE_INLINE
+memory_block make_memory_block(byte *memory, usize size)
+{
+    memory_block result;
+    result.memory = memory;
+    result.size = size;
+    return result;
+}
+
+FORCE_INLINE
+memory_block make_memory_block(void *memory, usize size)
+{
+    return make_memory_block((byte *) memory, size);
+}
 
 FORCE_INLINE
 memory_block memory__advance_block(memory_block *block, usize bytes)
