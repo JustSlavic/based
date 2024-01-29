@@ -176,7 +176,7 @@ acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
         acf__eat_token(lexer);
 
         result = { ALLOCATE(lexer->a, acf_impl) };
-        result.set_bool(ACF_TOKEN__TRUE ? true : false);
+        result.set_bool(t.kind == ACF_TOKEN__TRUE ? true : false);
     }
     else if (t.kind == ACF_TOKEN__NUMLIT)
     {
@@ -340,7 +340,7 @@ acf acf::get_value(key_t k)
     acf result = {};
     if (is_object())
     {
-        for (int i = 0; i < ARRAY_COUNT(impl->object->keys); i++)
+        for (usize i = 0; i < ARRAY_COUNT(impl->object->keys); i++)
         {
             if (impl->object->keys[i] == k)
             {
