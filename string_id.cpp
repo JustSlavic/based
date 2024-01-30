@@ -91,7 +91,7 @@ char const *string_id::get_cstring()
     char const *result = string_id__storage_instance.table[id];
     return result;
 }
-
+ 
 string_view string_id::get_string_view()
 {
     string_view result;

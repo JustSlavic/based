@@ -72,16 +72,19 @@ void logger__log(struct logger *logger,
 {
     // @todo: make 2 independent settings: send to stream / file
     //                                     print [filename:line] / print [date time]
-    va_list args;
-    va_start(args, fmt);
     if (logger__is(logger, LOGGER__STREAM))
     {
+        va_list args;
+        va_start(args, fmt);
         dprintf(logger->fd, "[%s:%d] ", cl.filename, cl.line);
         vdprintf(logger->fd, fmt, args);
         dprintf(logger->fd, "\n");
+        va_end(args);
     }
     if (logger__is(logger, LOGGER__FILE))
     {
+        va_list args;
+        va_start(args, fmt);
         time_t t = time(NULL);
         struct tm tm = *localtime(&t);
         logger->sb.append("[%d-%02d-%02d %02d:%02d:%02d] ",
@@ -89,8 +92,8 @@ void logger__log(struct logger *logger,
         logger->sb.append(fmt, args);
         logger->sb.append("\n");
         logger__flush(logger);
+        va_end(args);
     }
-    va_end(args);
 }
 
 bool logger__is(struct logger *logger, logger_type type)
