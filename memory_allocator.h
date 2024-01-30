@@ -8,7 +8,7 @@
 #define ALLOCATE_TYPE_IN_BLOCK(ALLOCATOR, TYPE) memory_allocator__allocate(ALLOCATOR, sizeof(TYPE), alignof(TYPE))
 #define ALLOCATE_(ALLOCATOR, TYPE) (TYPE *) ALLOCATE_TYPE_IN_BLOCK_(ALLOCATOR, TYPE).memory
 #define ALLOCATE(ALLOCATOR, TYPE) (TYPE *) ALLOCATE_TYPE_IN_BLOCK(ALLOCATOR, TYPE).memory
-#define DEALLOCATE(ALLOCATOR, POINTER) memory_allocator__deallocate(ALLOCATOR, POINTER)
+#define DEALLOCATE(ALLOCATOR, POINTER) memory_allocator__deallocate(ALLOCATOR, memory_block{ (byte *)(POINTER), (sizeof(*(POINTER))) })
 #define DEALLOCATE_BLOCK(ALLOCATOR, BLOCK) memory_allocator__deallocate(ALLOCATOR, BLOCK)
 #define REALLOCATE(ALLOCATOR, BLOCK, NEW_SIZE) memory_allocator__reallocate(ALLOCATOR, BLOCK, NEW_SIZE)
 
