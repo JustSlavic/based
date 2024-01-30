@@ -25,14 +25,15 @@ struct acf
     bool32 is_object();
     bool32 is_list();
 
-    bool32      get_bool();
-    int64       get_integer();
-    float64     get_floating();
-    string_view get_string();
-    bool32      get_bool(bool32 default_value);
-    int64       get_integer(int64 default_value);
-    float64     get_floating(float64 default_value);
-    string_view get_string(char const *default_value);
+    bool32      to_bool();
+    int64       to_integer();
+    float64     to_floating();
+    string_view to_string();
+    bool32      to_bool(bool32 default_value);
+    int64       to_integer(int64 default_value);
+    float64     to_floating(float64 default_value);
+    string_view to_string(char const *default_value);
+    
     acf         get_value(char const *cstr);
     acf         get_value(key_t k);
 
