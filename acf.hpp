@@ -34,8 +34,8 @@ struct acf
     float64     to_floating(float64 default_value);
     string_view to_string(char const *default_value);
     
-    acf         get_value(char const *cstr);
-    acf         get_value(key_t k);
+    acf get_value(char const *cstr);
+    acf get_value(key_t k);
 
     uint32 get_size();
 
@@ -45,14 +45,19 @@ struct acf
     void set_floating(float64 value);
     void set_string(string_view value);
     void set_object();
+    void set_list();
 
     void push(key_t k, val_t v);
+    void push(val_t v);
 
     struct key_value_pair;
     struct pair_iterator;
-    struct iterator_proxy;
+    struct pair_iterator_proxy;
+    struct value_iterator;
+    struct value_iterator_proxy;
 
-    iterator_proxy pairs();
+    pair_iterator_proxy pairs();
+    value_iterator_proxy values();
 
     static acf parse(memory_allocator a, memory_block buffer);
 };
@@ -82,7 +87,7 @@ struct acf::pair_iterator
     val_t value() const;
 };
 
-struct acf::iterator_proxy
+struct acf::pair_iterator_proxy
 {
     acf_impl *impl;
 
@@ -90,6 +95,32 @@ struct acf::iterator_proxy
     pair_iterator end()   { pair_iterator it; it.impl = impl; it.index = (acf{ impl }).get_size(); return it; }
 };
 
-acf::iterator_proxy acf::pairs() { return acf::iterator_proxy{ impl }; }
+struct acf::value_iterator
+{
+    acf_impl *impl;
+    uint32 index;
+
+    value_iterator& operator ++ () { index += 1; return *this; }
+    value_iterator  operator ++ (int) { value_iterator old = *this; index += 1; return old; }
+
+    value_iterator& operator -- () { index -= 1; return *this; }
+    value_iterator  operator -- (int) { value_iterator old = *this; index -= 1; return old; }
+
+    bool operator == (const value_iterator& other) const { return (impl == other.impl) && (index == other.index); }
+    bool operator != (const value_iterator& other) const { return !(*this == other); }
+
+    val_t operator * () const;
+};
+
+struct acf::value_iterator_proxy
+{
+    acf_impl *impl;
+
+    value_iterator begin() { value_iterator it; it.impl = impl; it.index = 0; return it; }
+    value_iterator end()   { value_iterator it; it.impl = impl; it.index = (acf{ impl }).get_size(); return it; }
+};
+
+acf::pair_iterator_proxy acf::pairs() { return acf::pair_iterator_proxy{ impl }; }
+acf::value_iterator_proxy acf::values() { return acf::value_iterator_proxy{ impl }; }
 
 #endif // BASED__ACF_H

@@ -8,6 +8,8 @@ struct string_view
 {
     char const *data;
     usize size;
+
+    bool32 is_empty() const { return (data == 0) || (size == 0); }
 };
 
 
@@ -20,6 +22,13 @@ bool32 operator == (string_view s1, string_view s2)
         is_equal = (s1.data[i] == s2.data[i]);
     }
     return is_equal;
+}
+
+FORCE_INLINE
+bool32 operator == (string_view s1, char const *s2)
+{
+    // @todo: make it better
+    return (s1 == (string_view{ s2, cstring__size_no0(s2) }));
 }
 
 

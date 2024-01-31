@@ -23,6 +23,12 @@ struct acf_object
     uint32 count;
 };
 
+struct acf_list
+{
+    acf_impl *vals[32];
+    uint32 count;
+};
+
 struct acf_impl
 {
     acf_kind kind;
@@ -33,6 +39,7 @@ struct acf_impl
         int64       integer;
         string_view string;
         acf_object *object;
+        acf_list   *list;
     };
 };
 
@@ -164,10 +171,6 @@ acf__token acf__eat_token(acf__lexer *lexer)
     return result;
 }
 
-// acf__parse_value (null | true | false | <numlit> | object | list)
-// acf__parse_kv    (identifier '=' value ';'?)
-// acf__parse       (kv pairs => object | comma separated values => list (if one value => return it))
-
 acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level);
 acf::key_value_pair acf__parse_kv(acf__lexer *lexer);
 
@@ -282,9 +285,48 @@ acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
     }
     else if (t.kind == '[')
     {
-        // Parse list
         acf__eat_token(lexer);
-        // ...
+
+        result = { ALLOCATE(lexer->a, acf_impl) };
+        result.set_list();
+
+        result.impl->list = ALLOCATE(lexer->a, acf_list);
+
+        if (result.is_valid())
+        {
+            while (result.get_size() < ARRAY_COUNT(result.impl->list->vals))
+            {
+                acf item = acf__parse_value(lexer, false);
+                if (item.is_valid())
+                {
+                    result.push(item);
+
+                    acf__token comma = acf__get_token(lexer);
+                    if (comma.kind == ',')
+                    {
+                        acf__eat_token(lexer);
+                    }
+                    else if (comma.kind == ']')
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            acf__token bracket = acf__get_token(lexer);
+            if (bracket.kind == ']')
+            {
+                acf__eat_token(lexer);
+            }
+            else
+            {
+                // Report error
+            }
+        }
     }
     return result;
 }
@@ -319,6 +361,52 @@ acf acf::parse(memory_allocator a, memory_block buffer)
     lexer.l = make_lexer(buffer);
     lexer.current_token_ok = false;
     result = acf__parse_value(&lexer, true);
+
+    acf__token eof = acf__get_token(&lexer);
+    if (eof.kind == ACF_TOKEN__EOF)
+    {
+        // Ok
+    }
+    else
+    {
+        {
+            acf list_value = { ALLOCATE(a, acf_impl) };
+            list_value.set_list();
+
+            list_value.impl->list = ALLOCATE(a, acf_list);
+
+            list_value.push(result);
+            result = list_value;
+        }
+
+        if (eof.kind == ',')
+        {
+            acf__eat_token(&lexer);
+        }
+
+        while (result.get_size() < ARRAY_COUNT(result.impl->list->vals))
+        {
+            acf item = acf__parse_value(&lexer, false);
+            if (item.is_valid())
+            {
+                result.push(item);
+
+                acf__token comma = acf__get_token(&lexer);
+                if (comma.kind == ',')
+                {
+                    acf__eat_token(&lexer);
+                }
+                else if (comma.kind == ']' || comma.kind == ACF_TOKEN__EOF)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
 
     return result;
 }
@@ -370,6 +458,7 @@ uint32 acf::get_size()
 {
     if (!is_valid()) return 0;
     if (is_object()) return impl->object->count;
+    if (is_list()) return impl->list->count;
     else return 1;
 }
 
@@ -422,7 +511,15 @@ void acf::set_object()
     }
 }
 
-void acf::push(string_id k, acf v)
+void acf::set_list()
+{
+    if (is_list() || !is_valid())
+    {
+        impl->kind = ACF_LIST;
+    }
+}
+
+void acf::push(key_t k, val_t v)
 {
     if (is_object())
     {
@@ -430,6 +527,16 @@ void acf::push(string_id k, acf v)
         impl->object->keys[index] = k;
         impl->object->vals[index] = v.impl;
         impl->object->count += 1;
+    }
+}
+
+void acf::push(val_t v)
+{
+    if (is_list())
+    {
+        auto index = impl->list->count;
+        impl->list->vals[index] = v.impl;
+        impl->list->count += 1;
     }
 }
 
@@ -449,4 +556,17 @@ acf::key_value_pair acf::pair_iterator::operator * () const
 
 // acf::key_t acf::pair_iterator::key() const;
 // acf::val_t acf::pair_iterator::value() const;
+
+acf::val_t acf::value_iterator::operator * () const
+{
+    val_t result = {};
+    if ((acf{ impl }).is_list())
+    {
+        if (index < impl->list->count)
+        {
+            result.impl = impl->list->vals[index];
+        }
+    }
+    return result;
+}
 

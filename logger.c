@@ -70,8 +70,6 @@ void logger__log(struct logger *logger,
                  struct code_location cl,
                  char const *fmt, ...)
 {
-    // @todo: make 2 independent settings: send to stream / file
-    //                                     print [filename:line] / print [date time]
     if (logger__is(logger, LOGGER__STREAM))
     {
         va_list args;
