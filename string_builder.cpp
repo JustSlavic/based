@@ -10,7 +10,7 @@ string_builder make_string_builder(memory_block blk)
     return result;
 }
 
-void string_builder::append(char const *fmt, ...)
+int string_builder::append(char const *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -23,9 +23,11 @@ void string_builder::append(char const *fmt, ...)
     {
         used += copied_bytes;
     }
+
+    return copied_bytes;
 }
 
-void string_builder::append(char const *fmt, va_list args)
+int string_builder::append(char const *fmt, va_list args)
 {
     char *cursor = (char *) buffer.memory + used;
     usize buffer_size = buffer.size - used;
@@ -35,15 +37,19 @@ void string_builder::append(char const *fmt, va_list args)
     {
         used += copied_bytes;
     }
+
+    return copied_bytes;
 }
 
-void string_builder::append(memory_block str)
+int string_builder::append(memory_block str)
 {
     if (used + str.size < buffer.size)
     {
         memory__copy(buffer.memory + used, str.memory, str.size);
         used += str.size;
+        return str.size;
     }
+    return 0;
 }
 
 void string_builder::reset() {

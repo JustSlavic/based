@@ -9,9 +9,9 @@ struct string_builder {
     memory_block buffer;
     usize used;
 
-    void append(char const *fmt, ...);
-    void append(char const *fmt, va_list args);
-    void append(memory_block memory);
+    int append(char const *fmt, ...);
+    int append(char const *fmt, va_list args);
+    int append(memory_block memory);
     void reset();
     memory_block get_string();
 };
