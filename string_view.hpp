@@ -2,12 +2,21 @@
 #define BASED__STRING_VIEW
 
 #include "base.h"
+#include "memory.h"
 
 
 struct string_view
 {
     char const *data;
     usize size;
+
+    static string_view from(char const *s)
+    {
+        string_view result;
+        result.data = s;
+        result.size = cstring__size_no0(s);
+        return result;
+    }
 
     bool32 is_empty() const { return (data == 0) || (size == 0); }
 };
