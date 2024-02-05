@@ -91,6 +91,14 @@ typedef double               float64;
 #define UINT8_MAX            0xFF
 #define UINT16_MAX           0xFFFF
 #define UINT32_MAX           0xFFFFFFFF
+
+#ifndef va_start
+typedef __builtin_va_list va_list;
+#define va_start __builtin_va_start
+#define va_arg   __builtin_va_arg
+#define va_end   __builtin_va_end
+#endif
+
 #endif
 
 #if ARCH_64BIT
@@ -175,13 +183,6 @@ typedef uint8                bool;
 #define false 0
 #endif
 #endif // C
-
-#ifndef va_start
-typedef __builtin_va_list va_list;
-#define va_start __builtin_va_start
-#define va_arg   __builtin_va_arg
-#define va_end   __builtin_va_end
-#endif
 
 #define VA_ARGS(...) , ##__VA_ARGS__
 

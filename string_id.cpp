@@ -1,22 +1,15 @@
 #include "string_id.hpp"
 
 
-struct string_id__storage
+GLOBAL struct string_id::storage string_id__storage_instance;
+
+
+string_id::storage string_id::initialize(memory_allocator a)
 {
-    memory_allocator allocator;
-
-    char const *table[1024];
-    usize       sizes[1024];
-    uint64      hashes[1024];
-};
-
-GLOBAL struct string_id__storage string_id__storage_instance;
-
-
-void string_id::initialize(memory_allocator a)
-{
-    memory__set(&string_id__storage_instance, 0, sizeof(string_id__storage));
+    memory__set(&string_id__storage_instance, 0, sizeof(string_id::storage));
     string_id__storage_instance.allocator = a;
+
+    return string_id__storage_instance;
 }
 
 uint64 string_id__hash(char const *buffer, usize size)
@@ -36,20 +29,20 @@ uint64 string_id__hash(char const *buffer, usize size)
     return hash;
 }
 
-string_id string_id__from_buffer(char const *buffer, usize size)
+string_id string_id__from_buffer(string_id::storage *s, char const *buffer, usize size)
 {
     string_id result = {};
 
     uint64 hash = string_id__hash(buffer, size);
 
     int32 index = -1;
-    for (usize offset = 0; offset < ARRAY_COUNT(string_id__storage_instance.table); offset++)
+    for (usize offset = 0; offset < ARRAY_COUNT(s->table); offset++)
     {
-        uint64 i = (hash + offset) % ARRAY_COUNT(string_id__storage_instance.table);
-        if ((string_id__storage_instance.hashes[i] == 0) ||
-            (string_id__storage_instance.hashes[i] == hash))
+        uint64 i = (hash + offset) % ARRAY_COUNT(s->table);
+        if ((s->hashes[i] == 0) ||
+            (s->hashes[i] == hash))
         {
-            index = i;
+            index = (int32) i;
             break;
         }
     }
@@ -60,13 +53,13 @@ string_id string_id__from_buffer(char const *buffer, usize size)
     }
     else
     {
-        if (string_id__storage_instance.table[index] == NULL)
+        if (s->table[index] == NULL)
         {
-            string_id__storage_instance.table[index] = (char const *) ALLOCATE_BUFFER(string_id__storage_instance.allocator, size + 1).memory;
-            string_id__storage_instance.sizes[index] = size;
-            string_id__storage_instance.hashes[index] = hash;
+            s->table[index] = (char const *) ALLOCATE_BUFFER(s->allocator, size + 1).memory;
+            s->sizes[index] = size;
+            s->hashes[index] = hash;
 
-            memory__copy((void *) string_id__storage_instance.table[index], buffer, size);
+            memory__copy((void *) s->table[index], buffer, size);
         }
 
         result.id = index;
@@ -75,15 +68,26 @@ string_id string_id__from_buffer(char const *buffer, usize size)
     return result;
 }
 
+string_id string_id::from(storage *s, char const *cstr)
+{
+    usize size = cstring__size_no0(cstr);
+    return string_id__from_buffer(s, cstr, size);
+}
+
+string_id string_id::from(storage *s, string_view sv)
+{
+    return string_id__from_buffer(s, sv.data, sv.size);
+}
+
 string_id string_id::from(char const *cstr)
 {
     usize size = cstring__size_no0(cstr);
-    return string_id__from_buffer(cstr, size);
+    return string_id__from_buffer(&string_id__storage_instance, cstr, size);
 }
 
 string_id string_id::from(string_view sv)
 {
-    return string_id__from_buffer(sv.data, sv.size);
+    return string_id__from_buffer(&string_id__storage_instance, sv.data, sv.size);
 }
 
 char const *string_id::get_cstring()

@@ -97,7 +97,7 @@ usize cstring__size_with0(char const *cstr)
 }
 
 FORCE_INLINE
-int cstring__compare_cn(char const *s1, char const *s2, usize n)
+int cstring__compare_cn(char const *s1, char const *s2, uint32 n)
 {
     if (n > 0) do
     {
