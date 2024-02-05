@@ -33,7 +33,7 @@ FORCE_INLINE quaternion operator / (quaternion q, float32 c) { quaternion result
 FORCE_INLINE quaternion operator * (vector3 a, vector3 b)
 {
     quaternion result;
-    result._1  = (a._e1 * b._e1) + (a._e2 * b._e2) + (a._e3 * b._e3);
+    result._1   = (a._e1 * b._e1) + (a._e2 * b._e2) + (a._e3 * b._e3);
     result._e12 = (a._e1 * b._e2) - (a._e2 * b._e1);
     result._e23 = (a._e2 * b._e3) - (a._e3 * b._e2);
     result._e31 = (a._e3 * b._e1) - (a._e1 * b._e3);

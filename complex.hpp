@@ -18,6 +18,7 @@ struct complex
 FORCE_INLINE complex & operator += (complex & a, complex b) { a.re += b.re; a.im += b.im; return a; }
 FORCE_INLINE complex & operator -= (complex & a, complex b) { a.re -= b.re; a.im -= b.im; return a; }
 FORCE_INLINE complex & operator *= (complex & a, float32 c) { a.re *= c;    a.im *= c;    return a; }
+FORCE_INLINE complex & operator /= (complex & a, float32 c) { a.re /= c;    a.im /= c;    return a; }
 FORCE_INLINE complex & operator *= (complex & a, complex b) { a.re = a.re * b.re - a.im * b.im; a.im = a.re * b.im + a.im * b.re; return a; }
 
 FORCE_INLINE bool operator == (complex a, complex b) { bool r = (a.re == b.re) && (a.im == b.im); return r; }
@@ -45,8 +46,12 @@ FORCE_INLINE complex operator * (vector2 a, vector2 b) {
 FORCE_INLINE complex to_complex(vector2 v) { complex r; r.re = v.x; r.im = v.y; return r; }
 FORCE_INLINE vector2 to_vector2(complex a) { vector2 r; r.x = a.re; r.y = a.im; return r; }
 
-FORCE_INLINE void    conjugate(complex & a) { a.im = -a.im; }
-FORCE_INLINE complex conjugated(complex a) { conjugate(a); return a; }
+FORCE_INLINE void    conjugate    (complex & a) { a.im = -a.im; }
+FORCE_INLINE complex conjugated   (complex a) { conjugate(a); return a; }
+FORCE_INLINE float32 norm_squared (complex a) { float32 r = square(a.re) + square(a.im); return r; }
+FORCE_INLINE float32 norm         (complex a) { float32 r = square_root(norm_squared(a)); return r; }
+FORCE_INLINE void    normalize    (complex & a) { float32 n = norm(a); if (!near_zero(n)) { a /= n; } }
+FORCE_INLINE complex normalized   (complex a) { normalize(a); return a; }
 
 
 #endif // BASED__COMPLEX_HPP
