@@ -2,22 +2,21 @@
 #define BASED__STRING_BUILDER_HPP
 
 #include "base.h"
-#include "memory.h"
+#include "memory_bucket.hpp"
+#include "string_view.hpp"
 
 
 struct string_builder {
-    memory_block buffer;
-    usize used;
+    memory_bucket buffer;
+
+    static string_builder from(memory_buffer);
 
     int append(char const *fmt, ...);
     int append(char const *fmt, va_list args);
-    int append(memory_block memory);
+    // int append(memory_buffer buffer);
     void reset();
-    memory_block get_string();
+    string_view get_string();
 };
-
-string_builder make_string_builder(memory_block blk);
-
 
 
 #endif // BASED__STRING_BUILDER_H

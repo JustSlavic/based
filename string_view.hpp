@@ -3,6 +3,7 @@
 
 #include "base.h"
 #include "memory.h"
+#include "memory_buffer.h"
 
 
 struct string_view
@@ -10,6 +11,7 @@ struct string_view
     char const *data;
     usize size;
 
+    FORCE_INLINE
     static string_view from(char const *s)
     {
         string_view result;
@@ -17,6 +19,19 @@ struct string_view
         result.size = cstring__size_no0(s);
         return result;
     }
+
+    FORCE_INLINE
+    static string_view from(char const *data, usize size)
+    {
+        string_view result;
+        result.data = (char const *) data;
+        result.size = size;
+        return result;
+    }
+
+    FORCE_INLINE
+    static string_view from(byte *data, usize size) { return string_view::from((char const *) data, size); }
+
 
     bool32 is_empty() const { return (data == 0) || (size == 0); }
 };

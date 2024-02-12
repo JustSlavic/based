@@ -4,43 +4,6 @@
 #include "base.h"
 
 
-struct memory_block
-{
-    byte *memory;
-    usize size;
-};
-
-FORCE_INLINE
-memory_block make_memory_block(byte *memory, usize size)
-{
-    memory_block result;
-    result.memory = memory;
-    result.size = size;
-    return result;
-}
-
-FORCE_INLINE
-memory_block make_memory_block(void *memory, usize size)
-{
-    return make_memory_block((byte *) memory, size);
-}
-
-FORCE_INLINE
-memory_block memory__advance_block(memory_block *block, usize bytes)
-{
-    if (bytes > block->size)
-        bytes = block->size;
-
-    memory_block result;
-    result.memory = block->memory;
-    result.size = bytes;
-
-    block->memory = block->memory + bytes;
-    block->size = block->size - bytes;
-
-    return result;
-}
-
 FORCE_INLINE
 byte *memory__set(void *destination, int value, usize count)
 {
@@ -56,14 +19,6 @@ byte *memory__copy(void *destination, void const *source, usize count)
     byte *s = (byte *) source;
     while (count--) *d++ = *s++;
     return (byte *) destination;
-}
-
-FORCE_INLINE
-memory_block memory__empty_block(void)
-{
-    memory_block result;
-    memory__set(&result, 0, sizeof(memory_block));
-    return result;
 }
 
 FORCE_INLINE

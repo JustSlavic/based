@@ -2,11 +2,10 @@
 #include "memory.h"
 
 
-string_builder make_string_builder(memory_block blk)
+string_builder string_builder::from(memory_buffer buffer)
 {
     string_builder result;
-    result.buffer = blk;
-    result.used = 0;
+    result.buffer = memory_bucket::from(buffer);
     return result;
 }
 
@@ -14,52 +13,44 @@ int string_builder::append(char const *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    char *cursor = (char *) buffer.memory + used;
-    usize buffer_size = buffer.size - used;
-    int copied_bytes = vsnprintf(cursor, buffer_size, fmt, args);
-    va_end(args);
 
-    if (copied_bytes > 0)
-    {
-        used += copied_bytes;
-    }
+    auto free_memory = buffer.get_free();
+    int copied_bytes = vsnprintf((char *) free_memory.data, free_memory.size, fmt, args);
+    if (copied_bytes > 0) buffer.used += copied_bytes;
+
+    va_end(args);
 
     return copied_bytes;
 }
 
 int string_builder::append(char const *fmt, va_list args)
 {
-    char *cursor = (char *) buffer.memory + used;
-    usize buffer_size = buffer.size - used;
-    int copied_bytes = vsnprintf(cursor, buffer_size, fmt, args);
-
-    if (copied_bytes > 0)
-    {
-        used += copied_bytes;
-    }
+    auto free_memory = buffer.get_free();
+    int copied_bytes = vsnprintf((char *) free_memory.data, free_memory.size, fmt, args);
+    if (copied_bytes > 0) buffer.used += copied_bytes;
 
     return copied_bytes;
 }
 
-int string_builder::append(memory_block str)
-{
-    if (used + str.size < buffer.size)
-    {
-        memory__copy(buffer.memory + used, str.memory, str.size);
-        used += str.size;
-        return str.size;
-    }
-    return 0;
-}
+// int string_builder::append(memory_buffer )
+// {
+//     if (used + str.size < buffer.size)
+//     {
+//         memory__copy(buffer.memory + used, str.memory, str.size);
+//         used += str.size;
+//         return str.size;
+//     }
+//     return 0;
+// }
 
 void string_builder::reset() {
-    used = 0;
+    buffer.used = 0;
 }
 
-memory_block string_builder::get_string() {
-    memory_block result;
-    result.memory = buffer.memory;
-    result.size = used;
+string_view string_builder::get_string() {
+    string_view result;
+    result.data = (char const *) buffer.data;
+    result.size = buffer.used;
     return result;
 }
 

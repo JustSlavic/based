@@ -22,14 +22,14 @@ struct logger
     int fd;
     string_view filename;
     isize rotate_size;
+
+    bool is(logger_type);
+    void log(code_location cl, char const *fmt, ...);
+    void flush();
 };
 
-#define LOGGER(WHERE_TO_FIND_IT) struct logger *logger = (WHERE_TO_FIND_IT)->logger
-
-void logger__flush(struct logger *logger);
-void logger__log(struct logger *logger, struct code_location cl, char const *fmt, ...);
-bool logger__is(struct logger *logger, logger_type type);
-#define LOG(FORMAT, ...) logger__log(logger, CL_HERE, (FORMAT), ##__VA_ARGS__)
+#define LOGGER(WHERE_TO_FIND_IT) logger *logger__ = (WHERE_TO_FIND_IT)->logger
+#define LOG(FORMAT, ...) logger__->log(CL_HERE, (FORMAT), ##__VA_ARGS__)
 
 
 #endif // LOGGER_H

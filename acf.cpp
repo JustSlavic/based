@@ -1,5 +1,5 @@
 #include "acf.hpp"
-#include "lexer.h"
+#include "lexer.hpp"
 
 // ====== impl ======
 
@@ -16,16 +16,18 @@ enum acf_kind
     ACF_LIST,
 };
 
+#define ACF_MAX_SIZE 32
+
 struct acf_object
 {
-    acf_impl *vals[32];
-    string_id keys[32];
+    acf_impl *vals[ACF_MAX_SIZE];
+    string_id keys[ACF_MAX_SIZE];
     uint32 count;
 };
 
 struct acf_list
 {
-    acf_impl *vals[32];
+    acf_impl *vals[ACF_MAX_SIZE];
     uint32 count;
 };
 
@@ -47,7 +49,7 @@ struct acf_impl
 
 
 
-enum acf_token__kind
+enum acf_token_kind
 {
     ACF_TOKEN__EOF = 0,
 
@@ -66,145 +68,148 @@ enum acf_token__kind
     ACF_TOKEN__NUMLIT,
     ACF_TOKEN__STRING,
 };
-typedef enum acf_token__kind acf_token__kind;
 
-struct acf__token
+struct acf_token
 {
-    acf_token__kind kind;
+    acf_token_kind kind;
     int64 integer;
     string_view span;
 };
-typedef struct acf__token acf__token;
 
-struct acf__lexer
+struct acf_parser : lexer
 {
-    memory_allocator a;
+    memory_allocator allocator;
 
-    struct lexer l;
+    acf_token current_token;
+    bool is_current_token_ok;
 
-    acf__token current_token;
-    bool32 current_token_ok;
+    static acf_parser from(memory_allocator, memory_buffer);
+
+    acf_token get_token();
+    acf_token eat_token();
+
+    acf parse_value(bool32 is_top_level);
+    acf::key_value_pair parse_kv();
 };
-typedef struct acf__lexer acf__lexer;
 
-acf__token acf__get_token(acf__lexer *lexer)
+acf_parser acf_parser::from(memory_allocator a, memory_buffer buffer)
 {
-    acf__token result = {};
-    if (lexer->current_token_ok)
-    {
-        result = lexer->current_token;
-    }
-    else
-    {
-        consume_while(&lexer->l, is_ascii_whitespace);
+    acf_parser result;
+    *(lexer *) &result = lexer::from(buffer.data, buffer.size);
+    result.allocator = a;
+    result.is_current_token_ok = false;
+    return result;
+}
 
-        char c = get_char(&lexer->l);
-        if (c == 0)
+acf_token acf_parser::get_token()
+{
+    if (is_current_token_ok) { return current_token; }
+
+    consume_while(is_ascii_whitespace);
+
+    acf_token result = {};
+    char c = get_char();
+    if (c == 0)
+    {
+        result.kind = ACF_TOKEN__EOF;
+    }
+    else if (is_valid_identifier_head(c))
+    {
+        if (eat_string("null"))
         {
-            result.kind = ACF_TOKEN__EOF;
+            result.kind = ACF_TOKEN__NULL;
+            result.span.data = get_remaining_input() - 4;
+            result.span.size = 4;
         }
-        else if (is_valid_identifier_head(c))
+        else if (eat_string("true"))
         {
-            if (eat_cstring(&lexer->l, "null"))
-            {
-                result.kind = ACF_TOKEN__NULL;
-                result.span.data = get_pointer(&lexer->l) - 4;
-                result.span.size = 4;
-            }
-            else if (eat_cstring(&lexer->l, "true"))
-            {
-                result.kind = ACF_TOKEN__TRUE;
-                result.span.data = get_pointer(&lexer->l) - 4;
-                result.span.size = 4;
-            }
-            else if (eat_cstring(&lexer->l, "false"))
-            {
-                result.kind = ACF_TOKEN__FALSE;
-                result.span.data = get_pointer(&lexer->l) - 5;
-                result.span.size = 5;
-            }
-            else
-            {
-                result.kind = ACF_TOKEN__IDENTIFIER;
-                result.span.data = get_pointer(&lexer->l);
-                result.span.size = consume_while(&lexer->l, is_valid_identifier_body);
-            }
+            result.kind = ACF_TOKEN__TRUE;
+            result.span.data = get_remaining_input() - 4;
+            result.span.size = 4;
         }
-        else if (is_ascii_digit(c))
+        else if (eat_string("false"))
         {
-            int64 integral_part = 0;
-            while (is_ascii_digit(c))
-            {
-                eat_char(&lexer->l);
-                integral_part *= 10;
-                integral_part += c - '0';
-                c = get_char(&lexer->l);
-            }
-            result.kind = ACF_TOKEN__NUMLIT;
-            result.integer = integral_part;
-        }
-        else if (c == '"')
-        {
-            eat_char(&lexer->l);
-            result.kind = ACF_TOKEN__STRING;
-            result.span.data = get_pointer(&lexer->l);
-            result.span.size = consume_until(&lexer->l, is_ascii_double_quote);
-            eat_char(&lexer->l);
+            result.kind = ACF_TOKEN__FALSE;
+            result.span.data = get_remaining_input() - 5;
+            result.span.size = 5;
         }
         else
         {
-            result.kind = (enum acf_token__kind) c;
-            eat_char(&lexer->l);
+            result.kind = ACF_TOKEN__IDENTIFIER;
+            result.span.data = get_remaining_input();
+            result.span.size = consume_while(is_valid_identifier_body);
         }
-
-        lexer->current_token = result;
-        lexer->current_token_ok = true;
+    }
+    else if (is_ascii_digit(c))
+    {
+        int64 integral_part = 0;
+        while (is_ascii_digit(c))
+        {
+            eat_char();
+            integral_part *= 10;
+            integral_part += c - '0';
+            c = get_char();
+        }
+        result.kind = ACF_TOKEN__NUMLIT;
+        result.integer = integral_part;
+    }
+    else if (c == '"')
+    {
+        eat_char();
+        result.kind = ACF_TOKEN__STRING;
+        result.span.data = get_remaining_input();
+        result.span.size = consume_until(is_ascii_double_quote);
+        eat_char();
+    }
+    else
+    {
+        result.kind = (enum acf_token_kind) c;
+        eat_char();
     }
 
+    current_token = result;
+    is_current_token_ok = true;
     return result;
 }
 
-acf__token acf__eat_token(acf__lexer *lexer)
+acf_token acf_parser::eat_token()
 {
-    acf__token result = acf__get_token(lexer);
-    lexer->current_token_ok = false;
+    acf_token result = get_token();
+    is_current_token_ok = false;
     return result;
 }
 
-acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level);
-acf::key_value_pair acf__parse_kv(acf__lexer *lexer);
-
-acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
+acf acf_parser::parse_value(bool32 is_top_level)
 {
-    acf result = { NULL };
+    acf result = {};
 
-    acf__token t = acf__get_token(lexer);
+    auto t = get_token();
     if (t.kind == ACF_TOKEN__NULL)
     {
-        acf__eat_token(lexer);
+        eat_token();
 
-        result = { ALLOCATE(lexer->a, acf_impl) };
+        result.impl = allocator.allocate<acf_impl>();
         result.set_null();
     }
     else if (t.kind == ACF_TOKEN__TRUE || t.kind == ACF_TOKEN__FALSE)
     {
-        acf__eat_token(lexer);
+        eat_token();
 
-        result = { ALLOCATE(lexer->a, acf_impl) };
+        result.impl = allocator.allocate<acf_impl>();
         result.set_bool(t.kind == ACF_TOKEN__TRUE ? true : false);
     }
     else if (t.kind == ACF_TOKEN__NUMLIT)
     {
-        acf__eat_token(lexer);
+        eat_token();
 
-        result = { ALLOCATE(lexer->a, acf_impl) };
+        result.impl = allocator.allocate<acf_impl>();
         result.set_integer(t.integer);
     }
     else if (t.kind == ACF_TOKEN__STRING)
     {
-        acf__eat_token(lexer);
+        eat_token();
 
-        result = { ALLOCATE(lexer->a, acf_impl) };
+        result.impl = allocator.allocate<acf_impl>();
         result.set_string(t.span);
     }
     else if ((t.kind == '{') || (t.kind == ACF_TOKEN__IDENTIFIER))
@@ -213,7 +218,7 @@ acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
         bool32 ate_open_brace = false;
         if (t.kind == '{')
         {
-            acf__eat_token(lexer);
+            eat_token();
             ok = true;
             ate_open_brace = true;
         }
@@ -224,27 +229,27 @@ acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
 
         if (ok)
         {
-            result = { ALLOCATE(lexer->a, acf_impl) };
+            result.impl = allocator.allocate<acf_impl>();
             result.set_object();
 
-            result.impl->object = ALLOCATE(lexer->a, acf_object);
+            result.impl->object = allocator.allocate<acf_object>();
 
             if (result.is_valid())
             {
-                while (result.get_size() < ARRAY_COUNT(result.impl->object->keys))
+                while (result.get_size() < ACF_MAX_SIZE)
                 {
-                    acf__token id = acf__get_token(lexer);
+                    acf_token id = get_token();
                     if (id.kind != ACF_TOKEN__IDENTIFIER) { break; };
 
-                    acf::key_value_pair p = acf__parse_kv(lexer);
-                    if (p.value.is_valid())
+                    auto kv = parse_kv();
+                    if (kv.value.is_valid())
                     {
-                        result.push(p.key, p.value);
+                        result.push(kv.key, kv.value);
 
-                        acf__token semicolon = acf__get_token(lexer);
+                        acf_token semicolon = get_token();
                         if (semicolon.kind == ';')
                         {
-                            acf__eat_token(lexer);
+                            eat_token();
                         }
                         else if (semicolon.kind == '}')
                         {
@@ -257,12 +262,12 @@ acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
                     }
                 }
 
-                acf__token brace = acf__get_token(lexer);
+                acf_token brace = get_token();
                 if (brace.kind == '}')
                 {
                     if (ate_open_brace)
                     {
-                        acf__eat_token(lexer);
+                        eat_token();
                     }
                     else
                     {
@@ -285,26 +290,26 @@ acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
     }
     else if (t.kind == '[')
     {
-        acf__eat_token(lexer);
+        eat_token();
 
-        result = { ALLOCATE(lexer->a, acf_impl) };
+        result.impl = allocator.allocate<acf_impl>();
         result.set_list();
 
-        result.impl->list = ALLOCATE(lexer->a, acf_list);
+        result.impl->list = allocator.allocate<acf_list>();
 
         if (result.is_valid())
         {
             while (result.get_size() < ARRAY_COUNT(result.impl->list->vals))
             {
-                acf item = acf__parse_value(lexer, false);
+                acf item = parse_value(false);
                 if (item.is_valid())
                 {
                     result.push(item);
 
-                    acf__token comma = acf__get_token(lexer);
+                    auto comma = get_token();
                     if (comma.kind == ',')
                     {
-                        acf__eat_token(lexer);
+                        eat_token();
                     }
                     else if (comma.kind == ']')
                     {
@@ -317,10 +322,10 @@ acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
                 }
             }
 
-            acf__token bracket = acf__get_token(lexer);
+            auto bracket = get_token();
             if (bracket.kind == ']')
             {
-                acf__eat_token(lexer);
+                eat_token();
             }
             else
             {
@@ -331,21 +336,22 @@ acf acf__parse_value(acf__lexer *lexer, bool32 is_top_level)
     return result;
 }
 
-acf::key_value_pair acf__parse_kv(acf__lexer *lexer)
+acf::key_value_pair acf_parser::parse_kv()
 {
     acf::key_value_pair result = {};
-    acf__token id = acf__get_token(lexer);
+
+    auto id = get_token();
     if (id.kind == ACF_TOKEN__IDENTIFIER)
     {
-        acf__eat_token(lexer);
-        acf__token eq = acf__get_token(lexer);
+        eat_token();
+        acf_token eq = get_token();
         if (eq.kind == '=')
         {
-            acf__eat_token(lexer);
-            acf value = acf__parse_value(lexer, false);
+            eat_token();
+            acf value = parse_value(false);
             if (value.is_valid())
             {
-                result.key = string_id::from(id.span);
+                result.key = string_id::from(id.span.data, id.span.size);
                 result.value = value;
             }
         }
@@ -353,27 +359,20 @@ acf::key_value_pair acf__parse_kv(acf__lexer *lexer)
     return result;
 }
 
-acf acf::parse(memory_allocator a, memory_block buffer)
+acf acf::parse(memory_allocator a, memory_buffer buffer)
 {
-    acf result = {};
-    acf__lexer lexer;
-    lexer.a = a;
-    lexer.l = make_lexer(buffer);
-    lexer.current_token_ok = false;
-    result = acf__parse_value(&lexer, true);
+    acf_parser parser = acf_parser::from(a, buffer);
+    acf result = parser.parse_value(true);
 
-    acf__token eof = acf__get_token(&lexer);
-    if (eof.kind == ACF_TOKEN__EOF)
-    {
-        // Ok
-    }
-    else
+    auto eof = parser.get_token();
+    if (eof.kind != ACF_TOKEN__EOF)
     {
         {
-            acf list_value = { ALLOCATE(a, acf_impl) };
+            acf list_value;
+            list_value.impl = a.allocate<acf_impl>();
             list_value.set_list();
 
-            list_value.impl->list = ALLOCATE(a, acf_list);
+            list_value.impl->list = a.allocate<acf_list>();
 
             list_value.push(result);
             result = list_value;
@@ -381,20 +380,20 @@ acf acf::parse(memory_allocator a, memory_block buffer)
 
         if (eof.kind == ',')
         {
-            acf__eat_token(&lexer);
+            parser.eat_token();
         }
 
-        while (result.get_size() < ARRAY_COUNT(result.impl->list->vals))
+        while (result.get_size() < ACF_MAX_SIZE)
         {
-            acf item = acf__parse_value(&lexer, false);
+            acf item = parser.parse_value(false);
             if (item.is_valid())
             {
                 result.push(item);
 
-                acf__token comma = acf__get_token(&lexer);
+                auto comma = parser.get_token();
                 if (comma.kind == ',')
                 {
-                    acf__eat_token(&lexer);
+                    parser.eat_token();
                 }
                 else if (comma.kind == ']' || comma.kind == ACF_TOKEN__EOF)
                 {

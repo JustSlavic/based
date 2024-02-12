@@ -2,7 +2,8 @@
 #define BASED__ACF_H
 
 #include "base.h"
-#include "memory_allocator.h"
+#include "memory_buffer.h"
+#include "memory_allocator.hpp"
 #include "string_view.hpp"
 #include "string_id.hpp"
 
@@ -59,7 +60,7 @@ struct acf
     pair_iterator_proxy pairs();
     value_iterator_proxy values();
 
-    static acf parse(memory_allocator a, memory_block buffer);
+    static acf parse(memory_allocator a, memory_buffer buffer);
 };
 
 struct acf::key_value_pair
