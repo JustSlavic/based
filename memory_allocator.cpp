@@ -151,6 +151,7 @@ void memory_allocator::deallocate(T *t)
 memory_buffer memory_allocator::reallocate(memory_buffer, usize new_size)
 {
     NOT_IMPLEMENTED();
+    return memory_buffer{};
 }
 
 void memory_allocator::reset()

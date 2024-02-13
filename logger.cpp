@@ -10,9 +10,9 @@
 #include <time.h>
 
 
-bool logger::is(logger_type type)
+bool logger::is(logger_type t)
 {
-    return (type & type) > 0;
+    return (type & t) > 0;
 }
 
 void logger::flush()
