@@ -5,7 +5,8 @@
 #define MINIMAL_MEMORY_PAGE_SIZE MEGABYTES(1)
 
 
-struct memory_arena {
+struct memory_arena
+{
     memory_allocator parent;
     memory_bucket    buffer;
 };
@@ -15,7 +16,21 @@ void          memory_arena__reset     (memory_arena *a);
 
 
 // @todo: memory_stack
-// @todo: memory_pool
+
+struct memory_pool
+{
+    memory_allocator parent;
+
+    memory_buffer buffer;
+    uint32 chunk_size;
+
+    void *free_list;
+};
+
+memory_buffer memory_pool__allocate_ (memory_pool *a, usize size, usize alignment);
+void          memory_pool__deallocate(memory_pool *a, void *p);
+void          memory_pool__reset     (memory_pool *a);
+
 // @todo: memory_heap
 
 
@@ -50,18 +65,51 @@ memory_allocator memory_allocator::make_arena(memory_buffer memory)
 
 memory_allocator memory_allocator::allocate_arena(usize size)
 {
-    memory_allocator result = { ARENA };
-    auto arena_impl = allocate<memory_arena>();
-    if (arena_impl)
-    {
-        auto arena_buffer = allocate_buffer_(size);
-        arena_impl->buffer = memory_bucket::from(arena_buffer);
-        arena_impl->parent.kind = kind;
-        arena_impl->parent.impl = impl;
+    auto arena_buffer = allocate_buffer_(size);
+    return make_arena(arena_buffer);
+}
 
-        result.impl = (memory_allocator_impl *) arena_impl;
+memory_allocator memory_allocator::make_pool(memory_buffer memory, usize chunk_size)
+{
+    memory_allocator result = { POOL };
+
+    auto buffer = memory_bucket::from(memory);
+    buffer.used = memory__get_padding(buffer.data, alignof(memory_pool));
+
+    auto *pool_impl = (memory_pool *) (buffer.data + buffer.used);
+    buffer.used += sizeof(memory_pool);
+
+    void *first_chunk = NULL;
+    void *chunk = NULL;
+
+    // Allocate first chunk
+    {
+        buffer.used += memory__get_padding(buffer.data + buffer.used, alignof(void *));
+        first_chunk = (void *) (buffer.data + buffer.used);
+        chunk = first_chunk;
+        buffer.used += chunk_size;
     }
+
+    while ((buffer.used + 8) + chunk_size < buffer.size)
+    {
+        buffer.used += memory__get_padding(buffer.data + buffer.used, alignof(void *));
+        *(void **) chunk = (void *) (buffer.data + buffer.used);
+        chunk = (void *) (buffer.data + buffer.used);
+        buffer.used += chunk_size;
+    }
+
+    pool_impl->buffer = memory;
+    pool_impl->chunk_size = chunk_size;
+    pool_impl->free_list = first_chunk;
+
+    result.impl = (memory_allocator_impl *) pool_impl;
     return result;
+}
+
+memory_allocator memory_allocator::allocate_pool(usize size, usize chunk_size)
+{
+    auto pool_buffer = allocate_buffer_(size);
+    return make_pool(pool_buffer, chunk_size);
 }
 
 template <typename T>
@@ -79,6 +127,12 @@ memory_buffer memory_allocator::allocate_buffer_(usize size, usize alignment)
         case ARENA:
         {
             result = memory_arena__allocate_((memory_arena *) impl, size, alignment);
+        }
+        break;
+
+        case POOL:
+        {
+            result = memory_pool__allocate_((memory_pool *) impl, size, alignment);
         }
         break;
 
@@ -126,6 +180,10 @@ void memory_allocator::deallocate(void *p, usize size)
     switch (kind)
     {
         case ARENA:
+        break;
+
+        case POOL:
+            memory_pool__deallocate((memory_pool *) impl, p);
         break;
 
         case MALLOC:
@@ -220,6 +278,28 @@ memory_buffer memory_arena__allocate_(memory_arena *arena, usize size, usize ali
 void memory_arena__reset(memory_arena *arena)
 {
     arena->buffer.used = 0;
+}
+
+// ======================= memory_pool ======================= //
+
+memory_buffer memory_pool__allocate_(memory_pool *pool, usize, usize alignment)
+{
+    memory_buffer result = {};
+    if (pool->free_list)
+    {
+        result.data = (byte *) pool->free_list;
+        result.size = pool->chunk_size;
+
+        pool->free_list = *(void **) pool->free_list;
+    }
+
+    return result;
+}
+
+void memory_pool__deallocate(memory_pool *a, void *p)
+{
+    *(void **) p = a->free_list;
+    a->free_list = p;
 }
 
 // ======================= mallocator ======================= //

@@ -23,6 +23,9 @@ struct memory_allocator
     static memory_allocator make_arena(memory_buffer);
     memory_allocator allocate_arena(usize size);
 
+    static memory_allocator make_pool(memory_buffer buffer, usize chunk_size);
+    memory_allocator allocate_pool(usize buffer_size, usize chunk_size);
+
     template <typename T>
     T *allocate();
 
