@@ -10,6 +10,11 @@ file file::open(char const *filename)
     return result;
 }
 
+void file::close()
+{
+    if (fd > 0) ::close(fd);
+}
+
 isize file::size()
 {
     isize result = 0;

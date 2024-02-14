@@ -9,6 +9,7 @@ struct file
     int fd;
 
     static file open(char const *filename);
+    void close();
 
     isize size();
     isize read(byte *buffer, usize size);
