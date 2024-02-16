@@ -23,6 +23,8 @@ struct memory_pool
 
     memory_buffer buffer;
     uint32 chunk_size;
+    uint32 chunk_count;
+    uint32 chunks_used;
 
     void *free_list;
 };
@@ -79,6 +81,8 @@ memory_allocator memory_allocator::make_pool(memory_buffer memory, usize chunk_s
     auto *pool_impl = (memory_pool *) (buffer.data + buffer.used);
     buffer.used += sizeof(memory_pool);
 
+    uint32 chunk_count = 0;
+
     void *first_chunk = NULL;
     void *chunk = NULL;
 
@@ -88,6 +92,7 @@ memory_allocator memory_allocator::make_pool(memory_buffer memory, usize chunk_s
         first_chunk = (void *) (buffer.data + buffer.used);
         chunk = first_chunk;
         buffer.used += chunk_size;
+        chunk_count += 1;
     }
 
     while ((buffer.used + 8) + chunk_size < buffer.size)
@@ -96,11 +101,14 @@ memory_allocator memory_allocator::make_pool(memory_buffer memory, usize chunk_s
         *(void **) chunk = (void *) (buffer.data + buffer.used);
         chunk = (void *) (buffer.data + buffer.used);
         buffer.used += chunk_size;
+        chunk_count += 1;
     }
 
     pool_impl->buffer = memory;
     pool_impl->chunk_size = chunk_size;
     pool_impl->free_list = first_chunk;
+    pool_impl->chunk_count = chunk_count;
+    pool_impl->chunks_used = 0;
 
     result.impl = (memory_allocator_impl *) pool_impl;
     return result;
@@ -239,8 +247,21 @@ memory_allocator::report memory_allocator::get_report()
         case ARENA:
         {
             auto *arena = (memory_arena *) impl;
+            result.kind = ARENA;
             result.size = arena->buffer.size;
             result.used = arena->buffer.used;
+        }
+        break;
+
+        case POOL:
+        {
+            auto *pool = (memory_pool *) impl;
+            result.kind = POOL;
+            result.size = pool->buffer.size;
+            result.used = pool->chunk_size * pool->chunks_used;
+            result.chunks_used = pool->chunks_used;
+            result.chunk_size = pool->chunk_size;
+            result.chunk_count = pool->chunk_count;
         }
         break;
 
@@ -291,6 +312,7 @@ memory_buffer memory_pool__allocate_(memory_pool *pool, usize, usize alignment)
         result.size = pool->chunk_size;
 
         pool->free_list = *(void **) pool->free_list;
+        pool->chunks_used += 1;
     }
 
     return result;
@@ -300,6 +322,7 @@ void memory_pool__deallocate(memory_pool *a, void *p)
 {
     *(void **) p = a->free_list;
     a->free_list = p;
+    a->chunks_used -= 1;
 }
 
 // ======================= mallocator ======================= //

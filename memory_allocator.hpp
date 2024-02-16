@@ -8,7 +8,7 @@
 struct memory_allocator_impl;
 struct memory_allocator
 {
-    enum
+    enum memory_allocator_kind
     {
         NONE,
         ARENA,
@@ -48,8 +48,12 @@ struct memory_allocator
 
     struct report
     {
+        memory_allocator_kind kind;
         usize size;
         usize used;
+        usize chunks_used;
+        usize chunk_size;
+        usize chunk_count;
     };
 
     report get_report();
