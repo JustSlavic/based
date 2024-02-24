@@ -2,8 +2,8 @@
 #define BASED__STRING_VIEW
 
 #include "base.h"
-#include "memory.h"
-#include "memory_buffer.h"
+#include "memory.hpp"
+#include "memory_buffer.hpp"
 
 
 struct string_view
@@ -16,7 +16,7 @@ struct string_view
     {
         string_view result;
         result.data = s;
-        result.size = cstring__size_no0(s);
+        result.size = cstring::size_no0(s);
         return result;
     }
 
@@ -52,7 +52,7 @@ FORCE_INLINE
 bool32 operator == (string_view s1, char const *s2)
 {
     // @todo: make it better
-    return (s1 == (string_view{ s2, cstring__size_no0(s2) }));
+    return (s1 == (string_view{ s2, cstring::size_no0(s2) }));
 }
 
 

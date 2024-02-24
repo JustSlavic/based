@@ -26,6 +26,10 @@ struct string_id
     static string_id from(char const *cstring, usize size);
     static string_id from(string_view s);
 
+    static string_id from(storage *sg, char const *cstring);
+    static string_id from(storage *sg, char const *cstring, usize size);
+    static string_id from(storage *sg, string_view s);
+
     char const *get_cstring();
     string_view get_string_view();
 };

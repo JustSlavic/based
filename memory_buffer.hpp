@@ -2,6 +2,7 @@
 #define BASED__MEMORY_BUFFER_HPP
 
 #include "base.h"
+#include "memory.hpp"
 
 
 struct memory_buffer
@@ -15,6 +16,15 @@ struct memory_buffer
         memory_buffer result;
         result.size = 0;
         result.data = NULL;
+        return result;
+    }
+
+    FORCE_INLINE
+    static memory_buffer from(char const *s)
+    {
+        memory_buffer result;
+        result.size = cstring::size_no0(s);
+        result.data = (byte *) s;
         return result;
     }
 

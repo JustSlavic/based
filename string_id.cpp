@@ -29,7 +29,7 @@ uint64 string_id__hash(char const *buffer, usize size)
     return hash;
 }
 
-string_id string_id::from(char const *buffer, usize size)
+string_id string_id::from(storage *sg, char const *buffer, usize size)
 {
     string_id result = {};
 
@@ -39,8 +39,8 @@ string_id string_id::from(char const *buffer, usize size)
     for (usize offset = 0; offset < STRID_STORAGE_CAPACITY; offset++)
     {
         uint64 i = (hash + offset) % STRID_STORAGE_CAPACITY;
-        if ((string_id__storage_instance.hashes[i] == 0) ||
-            (string_id__storage_instance.hashes[i] == hash))
+        if ((sg->hashes[i] == 0) ||
+            (sg->hashes[i] == hash))
         {
             index = (int32) i;
             break;
@@ -53,19 +53,35 @@ string_id string_id::from(char const *buffer, usize size)
     }
     else
     {
-        if (string_id__storage_instance.strings[index].data == NULL)
+        if (sg->strings[index].data == NULL)
         {
-            auto string_buffer = string_id__storage_instance.allocator.allocate_buffer(size + 1);
+            auto string_buffer = sg->allocator.allocate_buffer(size + 1);
             memory__copy(string_buffer.data, buffer, size);
 
-            string_id__storage_instance.strings[index] = string_view::from(string_buffer.data, string_buffer.size);
-            string_id__storage_instance.hashes[index]  = hash;
+            sg->strings[index] = string_view::from(string_buffer.data, string_buffer.size);
+            sg->hashes[index]  = hash;
         }
 
         result.id = index;
     }
 
     return result;
+}
+
+string_id string_id::from(char const *buffer, usize size)
+{
+    return from(&string_id__storage_instance, buffer, size);
+}
+
+string_id string_id::from(storage *sg, char const *cstr)
+{
+    usize size = cstring__size_no0(cstr);
+    return string_id::from(sg, cstr, size);
+}
+
+string_id string_id::from(storage *sg, string_view s)
+{
+    return string_id::from(sg, s.data, s.size);
 }
 
 string_id string_id::from(char const *cstr)

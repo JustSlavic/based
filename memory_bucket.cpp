@@ -1,5 +1,7 @@
 #include "memory_bucket.hpp"
 
+#include <stdio.h>
+
 
 memory_bucket memory_bucket::from(void *buffer, usize size)
 {

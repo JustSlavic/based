@@ -2,7 +2,9 @@
 #define BASED__MEMORY_BUCKET_HPP
 
 #include "base.h"
-#include "memory_buffer.h"
+#include "memory_buffer.hpp"
+
+#include <stdarg.h>
 
 
 struct memory_bucket

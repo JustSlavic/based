@@ -4,6 +4,10 @@
 #include <base.h>
 
 
+#define truncate_to_int32(x) (int32) (x)
+#define truncate_to_uint32(x) (uint32) (x)
+
+
 int16 int16__change_endianness(int16 n)
 {
     int16 result = ((n & 0xFF00) >> 8) |

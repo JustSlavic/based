@@ -2,7 +2,8 @@
 #define BASED__MEMORY_ALLOCATOR_H
 
 #include "base.h"
-#include "memory_buffer.h"
+#include "memory_buffer.hpp"
+#include "array.hpp"
 
 
 struct memory_allocator_impl;
@@ -23,8 +24,8 @@ struct memory_allocator
     static memory_allocator make_arena(memory_buffer);
     memory_allocator allocate_arena(usize size);
 
-    static memory_allocator make_pool(memory_buffer buffer, usize chunk_size);
-    memory_allocator allocate_pool(usize buffer_size, usize chunk_size);
+    static memory_allocator make_pool(memory_buffer buffer, uint32 chunk_size);
+    memory_allocator allocate_pool(usize buffer_size, uint32 chunk_size);
 
     template <typename T>
     T *allocate();
@@ -34,6 +35,12 @@ struct memory_allocator
 
     memory_buffer allocate_buffer(usize size);
     memory_buffer allocate_buffer(usize size, usize alignment);
+
+    template <typename T>
+    array<T> allocate_array(usize count);
+
+    template <typename T>
+    array<T> allocate_array_(usize count);
 
     memory_buffer allocate_copy(void *, usize);
 
