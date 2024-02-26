@@ -8,6 +8,12 @@
 #define truncate_to_uint32(x) (uint32) (x)
 
 
+int8  absolute(int8  x) { return x < 0 ? -x : x; }
+int16 absolute(int16 x) { return x < 0 ? -x : x; }
+int32 absolute(int32 x) { return x < 0 ? -x : x; }
+int64 absolute(int64 x) { return x < 0 ? -x : x; }
+
+
 int16 int16__change_endianness(int16 n)
 {
     int16 result = ((n & 0xFF00) >> 8) |

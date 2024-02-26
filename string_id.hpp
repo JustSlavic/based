@@ -2,6 +2,7 @@
 #define BASED__STRING_ID_H
 
 #include <base.h>
+#include <memory.hpp>
 #include <memory_allocator.hpp>
 #include <string_view.hpp>
 

@@ -2,7 +2,7 @@
 #define BASED__MEMORY_H
 
 #include "base.h"
-
+#include <string.h>
 
 FORCE_INLINE
 usize get_padding(void *pointer, usize alignment)

@@ -6,7 +6,7 @@ GLOBAL struct string_id::storage string_id__storage_instance;
 
 string_id::storage string_id::initialize(memory_allocator a)
 {
-    memory__set(&string_id__storage_instance, 0, sizeof(string_id::storage));
+    memset(&string_id__storage_instance, 0, sizeof(string_id::storage));
     string_id__storage_instance.allocator = a;
 
     return string_id__storage_instance;
@@ -56,7 +56,7 @@ string_id string_id::from(storage *sg, char const *buffer, usize size)
         if (sg->strings[index].data == NULL)
         {
             auto string_buffer = sg->allocator.allocate_buffer(size + 1);
-            memory__copy(string_buffer.data, buffer, size);
+            memcpy(string_buffer.data, buffer, size);
 
             sg->strings[index] = string_view::from(string_buffer.data, string_buffer.size);
             sg->hashes[index]  = hash;
@@ -75,7 +75,7 @@ string_id string_id::from(char const *buffer, usize size)
 
 string_id string_id::from(storage *sg, char const *cstr)
 {
-    usize size = cstring__size_no0(cstr);
+    usize size = cstring::size_no0(cstr);
     return string_id::from(sg, cstr, size);
 }
 
@@ -86,7 +86,7 @@ string_id string_id::from(storage *sg, string_view s)
 
 string_id string_id::from(char const *cstr)
 {
-    usize size = cstring__size_no0(cstr);
+    usize size = cstring::size_no0(cstr);
     return string_id::from(cstr, size);
 }
 

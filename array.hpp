@@ -9,6 +9,9 @@
 template <typename T>
 struct array
 {
+    typedef T *iterator;
+    typedef T const *const_iterator;
+
     T *data_;
     usize size_;
     usize capacity_;
@@ -18,6 +21,18 @@ struct array
 
     usize size() const { return size_; }
     usize capacity() const { return capacity_; }
+
+    void clear() { size_ = 0; }
+    bool is_empty() const { return (size_ == 0); }
+    void resize(usize new_size) { size_ = new_size; }
+
+    iterator begin() { return data_; }
+    const_iterator begin() const { return data_; }
+    const_iterator cbegin() const { return data_; }
+
+    iterator end() { return data_ + size_; }
+    const_iterator end() const { return data_ + size_; }
+    const_iterator cend() const { return data_ + size_; }
 
     static array<T> from(memory_buffer buffer)
     {
@@ -31,13 +46,9 @@ struct array
         return result;
     }
 
-    void clear() { size_ = 0; }
-    bool is_empty() const { return (size_ == 0); }
-    void resize(usize new_size) { size_ = new_size; }
-
     T& operator[] (usize index)
     {
-        ASSERT(index < size);
+        ASSERT(index < size_);
         return data_[index];
     }
 
@@ -71,6 +82,9 @@ struct array
 template <typename T, usize Capacity>
 struct static_array
 {
+    typedef T *iterator;
+    typedef T const *const_iterator;
+
     T data_[Capacity];
     usize size_;
 
@@ -82,6 +96,14 @@ struct static_array
 
     void clear() { size_ = 0; }
     bool empty() { return (size_ == 0); }
+
+    iterator begin() { return data_; }
+    const_iterator begin() const { return data_; }
+    const_iterator cbegin() const { return data_; }
+
+    iterator end() { return data_ + size_; }
+    const_iterator end() const { return data_ + size_; }
+    const_iterator cend() const { return data_ + size_; }
 
     T& operator[] (usize index)
     {
@@ -123,27 +145,6 @@ struct static_array
             size_ -= 1;
         }
     }
-
-    struct iterator
-    {
-        T *data;
-        usize size;
-        usize index;
-
-        bool operator == (iterator const & other) { return (data == other.data) && (size == other.size) && (index == other.index); }
-        bool operator != (iterator const & other) { return !(*this == other); }
-
-        iterator& operator ++ () { index += 1; return *this; }
-        iterator  operator ++ (int) { iterator old = *this; index += 1; return old; }
-
-        iterator& operator -- () { index -= 1; return *this; }
-        iterator  operator -- (int) { iterator old = *this; index -= 1; return old; }
-
-        T operator * () const { return (index < size) ? *(data + index) : T{}; }
-    };
-
-    iterator begin() { iterator result = { data_, size_, 0 }; return result; }
-    iterator end() { iterator result = { data_, size_, size_ }; return result; }
 };
 
 

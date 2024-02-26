@@ -68,3 +68,9 @@ int memory_bucket::append(char const *fmt, va_list args)
     return copied_bytes;
 }
 
+void memory_bucket::append(void *buffer, usize n)
+{
+    auto free_memory = get_free();
+    memcpy(free_memory.data, buffer, n);
+    used += n;
+}

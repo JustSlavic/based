@@ -21,6 +21,7 @@ struct memory_bucket
 
     int append(char const *fmt, ...);
     int append(char const *fmt, va_list args);
+    void append(void *buffer, usize size);
 };
 
 

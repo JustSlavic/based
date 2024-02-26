@@ -40,7 +40,7 @@ struct memory_allocator
     array<T> allocate_array(usize count);
 
     template <typename T>
-    array<T> allocate_array_(usize count);
+    array<T> allocate_array_open(usize count);
 
     memory_buffer allocate_copy(void *, usize);
 
@@ -70,6 +70,27 @@ memory_allocator mallocator();
 
 
 struct memory_allocator__report memory_allocator__report(memory_allocator a);
+
+
+template <typename T>
+array<T> memory_allocator::allocate_array(usize count)
+{
+    auto buffer = allocate_buffer_(sizeof(T) * count, alignof(T));
+
+    array<T> result;
+    result.data_ = (T *) buffer.data;
+    result.size_ = 0;
+    result.capacity_ = count;
+    return result;
+}
+
+template <typename T>
+array<T> memory_allocator::allocate_array_open(usize count)
+{
+    auto result = allocate_array<T>(count);
+    result.resize(count);
+    return result;
+}
 
 
 #endif // BASED__MEMORY_ALLOCATOR_H
