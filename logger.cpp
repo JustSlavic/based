@@ -20,7 +20,7 @@ void logger::flush()
     if (is(LOGGER__FILE))
     {
         char filename_buffer[512] = {};
-        memory__copy(filename_buffer, filename.data, filename.size);
+        memcpy(filename_buffer, filename.data, filename.size);
 
         if (rotate_size > 0)
         {
@@ -39,7 +39,7 @@ void logger::flush()
                 if (st.st_size > rotate_size)
                 {
                     char filename_buffer_new[512] = {};
-                    memory__copy(filename_buffer_new, filename.data, filename.size);
+                    memcpy(filename_buffer_new, filename.data, filename.size);
                     filename_buffer_new[filename.size] = '.';
                     filename_buffer_new[filename.size + 1] = '1';
 

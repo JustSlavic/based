@@ -107,18 +107,6 @@ float32 lerp(float32 a, float32 b, float32 t)
     return result;
 }
 
-int32 truncate_to_int32(float32 x)
-{
-    int32 result = (int32) x;
-    return result;
-}
-
-int32 round_to_int32(float32 x)
-{
-    int32 result = (int32) (x + sign(x) * 0.5f);
-    return result;
-}
-
 
 #endif // BASED__FLOATING_H
 

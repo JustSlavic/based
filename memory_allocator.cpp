@@ -399,12 +399,6 @@ memory_buffer memory_allocator::allocate_buffer(usize size)
     return result;
 }
 
-template<typename T>
-array<T> allocate_array(usize count)
-{
-    auto result = array<T>::from(allocate_buffer(sizeof(T) * count), alignof(T));
-}
-
 memory_buffer memory_allocator::allocate_copy(void *pointer, usize size)
 {
     memory_buffer result = allocate_buffer_(size);

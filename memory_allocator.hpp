@@ -75,12 +75,7 @@ struct memory_allocator__report memory_allocator__report(memory_allocator a);
 template <typename T>
 array<T> memory_allocator::allocate_array(usize count)
 {
-    auto buffer = allocate_buffer_(sizeof(T) * count, alignof(T));
-
-    array<T> result;
-    result.data_ = (T *) buffer.data;
-    result.size_ = 0;
-    result.capacity_ = count;
+    auto result = array<T>::from(allocate_buffer(sizeof(T) * count), alignof(T));
     return result;
 }
 

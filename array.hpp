@@ -141,7 +141,7 @@ struct static_array
     {
         if (index < size_)
         {
-            data_[index] = data_[size - 1];
+            data_[index] = data_[size_ - 1];
             size_ -= 1;
         }
     }

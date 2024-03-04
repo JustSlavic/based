@@ -431,7 +431,7 @@ string_view acf::to_string()   { return (is_string() ? impl->string : string_vie
 bool32      acf::to_bool(bool32 default_value)        { return (is_bool() ? impl->boolean : default_value); }
 int64       acf::to_integer(int64 default_value)      { return (is_integer() ? impl->integer : default_value); }
 float64     acf::to_floating(float64 default_value)   { return (is_floating() ? impl->floating : default_value); }
-string_view acf::to_string(char const *default_value) { return (is_string() ? impl->string : string_view{ default_value, cstring__size_no0(default_value) }); }
+string_view acf::to_string(char const *default_value) { return (is_string() ? impl->string : string_view::from(default_value, cstring::size_no0(default_value))); }
 
 acf acf::get_value(char const *cstr) { return get_value(string_id::from(cstr)); }
 acf acf::get_value(key_t k)

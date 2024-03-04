@@ -13,7 +13,17 @@ struct ring_buffer
     uint32 count;    // Number of elements you can read from the buffer looking back
     uint32 capacity; // Maximum number of elements that could be in the buffer
 
-    static ring_buffer allocate(memory_allocator allocator, uint32 count);
+    static ring_buffer from(void *buffer, usize size)
+    {
+        ring_buffer<T> result;
+        result.buffer.data = (byte *) buffer;
+        result.buffer.size = size;
+        result.cursor = 0;
+        result.count = 0;
+        result.capacity = size / sizeof(T);
+
+        return result;
+    }
 };
 
 
