@@ -1,7 +1,6 @@
 #include "memory_allocator.hpp"
 
 #include "memory.h"
-#include "memory_bucket.hpp"
 
 #include <stdlib.h>
 #include <string.h>
@@ -12,8 +11,10 @@
 
 struct memory_arena
 {
-    memory_allocator parent;
-    memory_bucket    buffer;
+    memory_allocator *parent;
+    usize size;
+    usize used;
+    byte *data;
 };
 
 memory_buffer memory_arena__allocate_ (memory_arena *a, usize size, usize alignment);
@@ -24,7 +25,7 @@ void          memory_arena__reset     (memory_arena *a);
 
 struct memory_pool
 {
-    memory_allocator parent;
+    memory_allocator *parent;
 
     memory_buffer buffer;
     uint32 chunk_size;
@@ -79,39 +80,39 @@ void          memory_pool__reset     (memory_pool *a);
 //     guard *last_guard;
 // };
 
-struct mallocator_t {};
-static mallocator_t mallocator_instance;
-
-memory_allocator mallocator();
-memory_buffer    mallocator__allocate_  (mallocator_t *a, usize size, usize alignment);
-void             mallocator__deallocate (mallocator_t *a, void *p);
+memory_allocator *mallocator();
+memory_buffer     mallocator__allocate_  (usize size, usize alignment);
+void              mallocator__deallocate (void *p);
 
 // ============================================================================= //
 
 memory_allocator memory_allocator::make_arena(memory_buffer memory)
 {
     memory_allocator result = { ARENA };
-    if (memory.size > sizeof(memory_arena))
+    if (sizeof(opaque) >= sizeof(memory_arena))
     {
-        auto buffer = memory_bucket::from(memory);
-        buffer.used = get_padding(buffer.data, alignof(memory_arena));
+        memset(result.opaque, 0, sizeof(opaque));
 
-        auto *arena_impl = (memory_arena *) (buffer.data + buffer.used);
-        buffer.used += sizeof(memory_arena);
-
-        arena_impl->parent.kind = NONE;
-        arena_impl->parent.impl = NULL;
-        arena_impl->buffer = buffer;
-
-        result.impl = (memory_allocator_impl *) arena_impl;
+        auto *arena = (memory_arena *) result.opaque;
+        arena->parent = NULL;
+        arena->size = memory.size;
+        arena->used = 0;
+        arena->data = memory.data;
     }
     return result;
 }
 
 memory_allocator memory_allocator::allocate_arena(usize size)
 {
-    auto arena_buffer = allocate_buffer_(size);
-    return make_arena(arena_buffer);
+    memory_allocator result = {};
+    auto arena_buffer = allocate_buffer_(size, alignof(memory_allocator));
+    if (arena_buffer)
+    {
+        result = make_arena(arena_buffer);
+        auto *arena = (memory_arena *) result.opaque;
+        arena->parent = this;
+    }
+    return result;
 }
 
 // ============================================================================= //
@@ -120,49 +121,61 @@ memory_allocator memory_allocator::make_pool(memory_buffer memory, uint32 chunk_
 {
     memory_allocator result = { POOL };
 
-    auto buffer = memory_bucket::from(memory);
-    buffer.used = get_padding(buffer.data, alignof(memory_pool));
+    ASSERT(get_padding(memory.data, alignof(void *)) == 0);
 
-    auto *pool_impl = (memory_pool *) (buffer.data + buffer.used);
-    buffer.used += sizeof(memory_pool);
+    // Chunk size is rounded up to the closest 8-byte boundary
 
-    uint32 chunk_count = 0;
+    chunk_size += (alignof(void *) - (chunk_size & alignof(void *)));
 
-    void *first_chunk = NULL;
-    void *chunk = NULL;
-
-    // Allocate first chunk
+    // Assuming the memory.data is on the 8-byte boundary, and
+    // chunk size `mod` 8 == 0, I can safely allocate all chunks
+    if (sizeof(opaque) >= sizeof(memory_pool))
     {
-        buffer.used += get_padding(buffer.data + buffer.used, alignof(void *));
-        first_chunk = (void *) (buffer.data + buffer.used);
-        chunk = first_chunk;
-        buffer.used += chunk_size;
-        chunk_count += 1;
+        memset(result.opaque, 0, sizeof(opaque));
+
+        auto *pool = (memory_pool *) result.opaque;
+
+        uint32 chunk_count = 0;
+
+        byte *first  = memory.data;
+        byte *cursor = memory.data;
+
+        while (true)
+        {
+            if (memory.size - (chunk_count * chunk_size) < chunk_size)
+                break;
+
+            byte *next = cursor + chunk_size;
+
+            *(byte **) cursor = next;
+            cursor = next;
+            chunk_count += 1;
+        }
+
+        pool->parent = NULL;
+        pool->buffer = memory;
+
+        pool->chunk_size = chunk_size;
+        pool->chunk_count = chunk_count;
+        pool->chunks_used = 0;
+
+        pool->free_list = first;
     }
 
-    while ((buffer.used + 8) + chunk_size < buffer.size)
-    {
-        buffer.used += get_padding(buffer.data + buffer.used, alignof(void *));
-        *(void **) chunk = (void *) (buffer.data + buffer.used);
-        chunk = (void *) (buffer.data + buffer.used);
-        buffer.used += chunk_size;
-        chunk_count += 1;
-    }
-
-    pool_impl->buffer = memory;
-    pool_impl->chunk_size = chunk_size;
-    pool_impl->free_list = first_chunk;
-    pool_impl->chunk_count = chunk_count;
-    pool_impl->chunks_used = 0;
-
-    result.impl = (memory_allocator_impl *) pool_impl;
     return result;
 }
 
 memory_allocator memory_allocator::allocate_pool(usize size, uint32 chunk_size)
 {
-    auto pool_buffer = allocate_buffer_(size);
-    return make_pool(pool_buffer, chunk_size);
+    memory_allocator result = {};
+    auto pool_buffer = allocate_buffer_(size, alignof(memory_allocator));
+    if (pool_buffer)
+    {
+        result = make_pool(pool_buffer, chunk_size);
+        auto *pool = (memory_pool *) result.opaque;
+        pool->parent = this;
+    }
+    return result;
 }
 
 // ============================================================================= //
@@ -357,19 +370,19 @@ memory_buffer memory_allocator::allocate_buffer_(usize size, usize alignment)
     {
         case ARENA:
         {
-            result = memory_arena__allocate_((memory_arena *) impl, size, alignment);
+            result = memory_arena__allocate_((memory_arena *) opaque, size, alignment);
         }
         break;
 
         case POOL:
         {
-            result = memory_pool__allocate_((memory_pool *) impl, size, alignment);
+            result = memory_pool__allocate_((memory_pool *) opaque, size, alignment);
         }
         break;
 
         case MALLOC:
         {
-            result = mallocator__allocate_((mallocator_t *) impl, size, alignment);
+            result = mallocator__allocate_(size, alignment);
         }
         break;
 
@@ -414,11 +427,11 @@ void memory_allocator::deallocate(void *p, usize size)
         break;
 
         case POOL:
-            memory_pool__deallocate((memory_pool *) impl, p);
+            memory_pool__deallocate((memory_pool *) opaque, p);
         break;
 
         case MALLOC:
-            mallocator__deallocate((mallocator_t *) impl, p);
+            mallocator__deallocate(p);
         break;
 
         default:
@@ -449,7 +462,7 @@ void memory_allocator::reset()
     {
         case ARENA:
         {
-            memory_arena__reset((memory_arena *) impl);
+            memory_arena__reset((memory_arena *) opaque);
         }
         break;
 
@@ -469,16 +482,16 @@ memory_allocator::report memory_allocator::get_report()
     {
         case ARENA:
         {
-            auto *arena = (memory_arena *) impl;
+            auto *arena = (memory_arena *) opaque;
             result.kind = ARENA;
-            result.size = arena->buffer.size;
-            result.used = arena->buffer.used;
+            result.size = arena->size;
+            result.used = arena->used;
         }
         break;
 
         case POOL:
         {
-            auto *pool = (memory_pool *) impl;
+            auto *pool = (memory_pool *) opaque;
             result.kind = POOL;
             result.size = pool->buffer.size;
             result.used = pool->chunk_size * pool->chunks_used;
@@ -505,15 +518,13 @@ memory_buffer memory_arena__allocate_(memory_arena *arena, usize size, usize ali
 {
     memory_buffer result = {};
 
-    auto free_buffer = arena->buffer.get_free();
-    usize padding = get_padding(free_buffer.data, alignment);
-
-    if ((padding + size) <= free_buffer.size)
+    usize padding = get_padding(arena->data + arena->used, alignment);
+    if (arena->used + padding + size <= arena->size)
     {
-        result.data = free_buffer.data + padding;
+        result.data = arena->data + arena->used + padding;
         result.size = size;
 
-        arena->buffer.used += (size + padding);
+        arena->used += (size + padding);
     }
 
     return result;
@@ -521,7 +532,7 @@ memory_buffer memory_arena__allocate_(memory_arena *arena, usize size, usize ali
 
 void memory_arena__reset(memory_arena *arena)
 {
-    arena->buffer.used = 0;
+    arena->used = 0;
 }
 
 // ======================= memory_pool ======================= //
@@ -550,15 +561,14 @@ void memory_pool__deallocate(memory_pool *a, void *p)
 
 // ======================= mallocator ======================= //
 
-memory_allocator mallocator()
+memory_allocator *mallocator()
 {
-    memory_allocator result;
+    static memory_allocator result;
     result.kind = memory_allocator::MALLOC;
-    result.impl = (memory_allocator_impl *) &mallocator_instance;
-    return result;
+    return &result;
 }
 
-memory_buffer mallocator__allocate_(mallocator_t *a, usize size, usize alignment)
+memory_buffer mallocator__allocate_(usize size, usize alignment)
 {
     memory_buffer result;
     result.data = (byte *) malloc(size);
@@ -566,7 +576,7 @@ memory_buffer mallocator__allocate_(mallocator_t *a, usize size, usize alignment
     return result;
 }
 
-void mallocator__deallocate(mallocator_t *a, void *p)
+void mallocator__deallocate(void *p)
 {
     free(p);
 }

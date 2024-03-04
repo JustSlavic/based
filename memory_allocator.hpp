@@ -6,7 +6,6 @@
 #include "array.hpp"
 
 
-struct memory_allocator_impl;
 struct memory_allocator
 {
     enum memory_allocator_kind
@@ -19,7 +18,7 @@ struct memory_allocator
         MALLOC,
     } kind;
 
-    memory_allocator_impl *impl;
+    uint64 opaque[8];
 
     static memory_allocator make_arena(memory_buffer);
     memory_allocator allocate_arena(usize size);
@@ -66,7 +65,7 @@ struct memory_allocator
     report get_report();
 };
 
-memory_allocator mallocator();
+memory_allocator *mallocator();
 
 
 struct memory_allocator__report memory_allocator__report(memory_allocator a);

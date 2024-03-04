@@ -1,6 +1,6 @@
 #include "util.hpp"
 
-memory_buffer load_file(memory_allocator allocator, char const *filename)
+memory_buffer load_file(memory_allocator *allocator, char const *filename)
 {
     memory_buffer result = {};
 
@@ -15,13 +15,13 @@ memory_buffer load_file(memory_allocator allocator, char const *filename)
         {}
         else
         {
-            memory_buffer block = allocator.allocate_buffer(st.st_size + 1);
+            memory_buffer block = allocator->allocate_buffer(st.st_size + 1);
             if (block.data != NULL)
             {
                 uint32 bytes_read = read(fd, block.data, st.st_size);
                 if (bytes_read < st.st_size)
                 {
-                    allocator.deallocate(block.data, block.size);
+                    allocator->deallocate(block.data, block.size);
                 }
                 else
                 {

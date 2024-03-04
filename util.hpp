@@ -4,7 +4,7 @@
 #include "base.h"
 
 
-memory_buffer load_file(memory_allocator allocator, char const *filename);
+memory_buffer load_file(memory_allocator *allocator, char const *filename);
 int load_file(byte *buffer, usize buffer_size, char const *filename);
 
 int to_int(char const *s, usize size);

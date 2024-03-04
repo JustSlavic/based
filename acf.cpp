@@ -78,12 +78,12 @@ struct acf_token
 
 struct acf_parser : lexer
 {
-    memory_allocator allocator;
+    memory_allocator *allocator;
 
     acf_token current_token;
     bool is_current_token_ok;
 
-    static acf_parser from(memory_allocator, memory_buffer);
+    static acf_parser from(memory_allocator *, memory_buffer);
 
     acf_token get_token();
     acf_token eat_token();
@@ -92,7 +92,7 @@ struct acf_parser : lexer
     acf::key_value_pair parse_kv();
 };
 
-acf_parser acf_parser::from(memory_allocator a, memory_buffer buffer)
+acf_parser acf_parser::from(memory_allocator *a, memory_buffer buffer)
 {
     acf_parser result;
     *(lexer *) &result = lexer::from(buffer.data, buffer.size);
@@ -188,28 +188,28 @@ acf acf_parser::parse_value(bool32 is_top_level)
     {
         eat_token();
 
-        result.impl = allocator.allocate<acf_impl>();
+        result.impl = allocator->allocate<acf_impl>();
         result.set_null();
     }
     else if (t.kind == ACF_TOKEN__TRUE || t.kind == ACF_TOKEN__FALSE)
     {
         eat_token();
 
-        result.impl = allocator.allocate<acf_impl>();
+        result.impl = allocator->allocate<acf_impl>();
         result.set_bool(t.kind == ACF_TOKEN__TRUE ? true : false);
     }
     else if (t.kind == ACF_TOKEN__NUMLIT)
     {
         eat_token();
 
-        result.impl = allocator.allocate<acf_impl>();
+        result.impl = allocator->allocate<acf_impl>();
         result.set_integer(t.integer);
     }
     else if (t.kind == ACF_TOKEN__STRING)
     {
         eat_token();
 
-        result.impl = allocator.allocate<acf_impl>();
+        result.impl = allocator->allocate<acf_impl>();
         result.set_string(t.span);
     }
     else if ((t.kind == '{') || (t.kind == ACF_TOKEN__IDENTIFIER))
@@ -229,10 +229,10 @@ acf acf_parser::parse_value(bool32 is_top_level)
 
         if (ok)
         {
-            result.impl = allocator.allocate<acf_impl>();
+            result.impl = allocator->allocate<acf_impl>();
             result.set_object();
 
-            result.impl->object = allocator.allocate<acf_object>();
+            result.impl->object = allocator->allocate<acf_object>();
 
             if (result.is_valid())
             {
@@ -292,10 +292,10 @@ acf acf_parser::parse_value(bool32 is_top_level)
     {
         eat_token();
 
-        result.impl = allocator.allocate<acf_impl>();
+        result.impl = allocator->allocate<acf_impl>();
         result.set_list();
 
-        result.impl->list = allocator.allocate<acf_list>();
+        result.impl->list = allocator->allocate<acf_list>();
 
         if (result.is_valid())
         {
@@ -359,7 +359,7 @@ acf::key_value_pair acf_parser::parse_kv()
     return result;
 }
 
-acf acf::parse(memory_allocator a, memory_buffer buffer)
+acf acf::parse(memory_allocator *a, memory_buffer buffer)
 {
     acf_parser parser = acf_parser::from(a, buffer);
     acf result = parser.parse_value(true);
@@ -369,10 +369,10 @@ acf acf::parse(memory_allocator a, memory_buffer buffer)
     {
         {
             acf list_value;
-            list_value.impl = a.allocate<acf_impl>();
+            list_value.impl = a->allocate<acf_impl>();
             list_value.set_list();
 
-            list_value.impl->list = a.allocate<acf_list>();
+            list_value.impl->list = a->allocate<acf_list>();
 
             list_value.push(result);
             result = list_value;

@@ -38,6 +38,9 @@ struct acf
     acf get_value(char const *cstr);
     acf get_value(key_t k);
 
+    acf operator [] (char const *cstr) { return get_value(cstr); }
+    acf operator [] (key_t k) { return get_value(k); }
+
     uint32 get_size();
 
     void set_null();
@@ -60,7 +63,7 @@ struct acf
     pair_iterator_proxy pairs();
     value_iterator_proxy values();
 
-    static acf parse(memory_allocator a, memory_buffer buffer);
+    static acf parse(memory_allocator *a, memory_buffer buffer);
 };
 
 struct acf::key_value_pair

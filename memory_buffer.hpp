@@ -10,6 +10,11 @@ struct memory_buffer
     usize size;
     byte *data;
 
+    operator bool()
+    {
+        return (size != 0) && (data != NULL);
+    }
+
     FORCE_INLINE
     static memory_buffer make()
     {
