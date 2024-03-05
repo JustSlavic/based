@@ -1,7 +1,10 @@
 #include "../platform.hpp"
 
-#include <sys/mman.h>
 #include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 
 namespace platform
@@ -72,6 +75,51 @@ timepoint wall_clock::now()
     return result;
 }
 
+int load_file(char const *filename, memory_buffer buffer)
+{
+    int result = -1;
+
+    int fd = open(filename, O_RDONLY, 0);
+    if (fd >= 0)
+    {
+        result = read(fd, buffer.data, buffer.size);
+        close(fd);
+    }
+
+    return result;
+}
+
+int load_file(char const *filename, memory_allocator *a, memory_buffer *buffer)
+{
+    int result = -1;
+
+    int fd = open(filename, O_RDONLY, 0);
+    if (fd >= 0)
+    {
+        struct stat st;
+        int ec = fstat(fd, &st);
+        if (ec >= 0)
+        {
+            auto content = a->allocate_buffer(st.st_size);
+            if (content)
+            {
+                uint32 bytes_read = read(fd, content.data, st.st_size);
+                if (bytes_read < st.st_size)
+                {
+                    a->deallocate(content);
+                }
+                else
+                {
+                    result = bytes_read;
+                    *buffer = content;
+                }
+            }
+        }
+        close(fd);
+    }
+
+    return result;
+}
 
 
 } // namespace platform

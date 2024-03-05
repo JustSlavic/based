@@ -3,6 +3,7 @@
 
 #include "base.h"
 #include "memory/buffer.hpp"
+#include "memory/allocator.hpp"
 #include "time.hpp"
 
 
@@ -18,6 +19,9 @@ namespace wall_clock
     [[nodiscard]] int64 frequency();
     [[nodiscard]] timepoint now();
 } // namespace wall_clock
+
+int load_file(char const *filename, memory_buffer buffer);
+int load_file(char const *filename, memory_allocator *a, memory_buffer *buffer);
 
 
 } // namespace platform

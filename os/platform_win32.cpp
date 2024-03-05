@@ -49,4 +49,58 @@ int64 wall_clock::frequency()
 }
 
 
+int load_file(char const *filename, memory_buffer buffer)
+{
+    int Result = -1;
+
+    HANDLE FileHandle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (FileHandle != INVALID_HANDLE_VALUE)
+    {
+        DWORD BytesRead;
+        BOOL ReadFileResult = ReadFile(FileHandle, buffer.data, (DWORD) buffer.size, &BytesRead, NULL);
+        if (ReadFileResult == TRUE)
+        {
+            Result = BytesRead;
+        }
+
+        CloseHandle(FileHandle);
+    }
+
+    return Result;
+}
+
+int load_file(char const *filename, memory_allocator *a, memory_buffer *buffer)
+{
+    int result = -1;
+
+    HANDLE FileHandle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (FileHandle != INVALID_HANDLE_VALUE)
+    {
+        LARGE_INTEGER FileSize;
+        BOOL GetSizeResult = GetFileSizeEx(FileHandle, &FileSize);
+        if (GetSizeResult == TRUE)
+        {
+            auto Content = a->allocate_buffer(FileSize.QuadPart)
+            if (Content)
+            {
+                DWORD BytesRead;
+                BOOL ReadFileResult = ReadFile(FileHandle, Memory.data, (DWORD) FileSize.QuadPart, &BytesRead, NULL);
+                if (ReadFileResult == FALSE)
+                {
+                    a->deallocate(Content);
+                }
+                else
+                {
+                    result = BytesRead;
+                    *buffer = Content
+                }
+            }
+        }
+        CloseHandle(FileHandle);
+    }
+
+    return result;
+}
+
+
 } // namespace platform
