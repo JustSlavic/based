@@ -21,8 +21,7 @@ namespace wall_clock
 } // namespace wall_clock
 
 int load_file(char const *filename, memory_buffer buffer);
-int load_file(char const *filename, memory_allocator *a, memory_buffer *buffer);
-
+memory_buffer load_file(char const *filename, memory_allocator *a);
 
 } // namespace platform
 

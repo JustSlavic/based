@@ -89,9 +89,9 @@ int load_file(char const *filename, memory_buffer buffer)
     return result;
 }
 
-int load_file(char const *filename, memory_allocator *a, memory_buffer *buffer)
+memory_buffer load_file(char const *filename, memory_allocator *a)
 {
-    int result = -1;
+    memory_buffer result = {};
 
     int fd = open(filename, O_RDONLY, 0);
     if (fd >= 0)
@@ -100,18 +100,14 @@ int load_file(char const *filename, memory_allocator *a, memory_buffer *buffer)
         int ec = fstat(fd, &st);
         if (ec >= 0)
         {
-            auto content = a->allocate_buffer(st.st_size);
-            if (content)
+            result = a->allocate_buffer(st.st_size);
+            if (result)
             {
-                uint32 bytes_read = read(fd, content.data, st.st_size);
+                uint32 bytes_read = read(fd, result.data, st.st_size);
                 if (bytes_read < st.st_size)
                 {
-                    a->deallocate(content);
-                }
-                else
-                {
-                    result = bytes_read;
-                    *buffer = content;
+                    a->deallocate(result);
+                    memset(&result, 0, sizeof(memory_buffer));
                 }
             }
         }

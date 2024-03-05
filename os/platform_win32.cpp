@@ -69,9 +69,9 @@ int load_file(char const *filename, memory_buffer buffer)
     return Result;
 }
 
-int load_file(char const *filename, memory_allocator *a, memory_buffer *buffer)
+memory_buffer load_file(char const *filename, memory_allocator *a)
 {
-    int result = -1;
+    memory_buffer Result = {}
 
     HANDLE FileHandle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (FileHandle != INVALID_HANDLE_VALUE)
@@ -80,26 +80,22 @@ int load_file(char const *filename, memory_allocator *a, memory_buffer *buffer)
         BOOL GetSizeResult = GetFileSizeEx(FileHandle, &FileSize);
         if (GetSizeResult == TRUE)
         {
-            auto Content = a->allocate_buffer(FileSize.QuadPart)
-            if (Content)
+            Result = a->allocate_buffer(FileSize.QuadPart)
+            if (Result)
             {
                 DWORD BytesRead;
-                BOOL ReadFileResult = ReadFile(FileHandle, Memory.data, (DWORD) FileSize.QuadPart, &BytesRead, NULL);
+                BOOL ReadFileResult = ReadFile(FileHandle, Result.data, (DWORD) FileSize.QuadPart, &BytesRead, NULL);
                 if (ReadFileResult == FALSE)
                 {
-                    a->deallocate(Content);
-                }
-                else
-                {
-                    result = BytesRead;
-                    *buffer = Content
+                    a->deallocate(Result);
+                    memset(&Result, 0, sizeof(memory_block));
                 }
             }
         }
         CloseHandle(FileHandle);
     }
 
-    return result;
+    return Result;
 }
 
 
