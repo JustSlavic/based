@@ -3,7 +3,6 @@
 
 #include <base.h>
 
-char* url_decode_gpt(const char* url);
 
 namespace web
 {

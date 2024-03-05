@@ -1,39 +1,39 @@
 #include "util.hpp"
 
-memory_buffer load_file(memory_allocator *allocator, char const *filename)
-{
-    memory_buffer result = {};
+// memory_buffer load_file(memory_allocator *allocator, char const *filename)
+// {
+//     memory_buffer result = {};
 
-    int fd = open(filename, O_RDONLY, 0);
-    if (fd < 0)
-    {}
-    else
-    {
-        struct stat st;
-        int ec = fstat(fd, &st);
-        if (ec < 0)
-        {}
-        else
-        {
-            memory_buffer block = allocator->allocate_buffer(st.st_size + 1);
-            if (block.data != NULL)
-            {
-                uint32 bytes_read = read(fd, block.data, st.st_size);
-                if (bytes_read < st.st_size)
-                {
-                    allocator->deallocate(block.data, block.size);
-                }
-                else
-                {
-                    result = block;
-                }
-            }
-        }
-        close(fd);
-    }
+//     int fd = open(filename, O_RDONLY, 0);
+//     if (fd < 0)
+//     {}
+//     else
+//     {
+//         struct stat st;
+//         int ec = fstat(fd, &st);
+//         if (ec < 0)
+//         {}
+//         else
+//         {
+//             memory_buffer block = allocator->allocate_buffer(st.st_size + 1);
+//             if (block.data != NULL)
+//             {
+//                 uint32 bytes_read = read(fd, block.data, st.st_size);
+//                 if (bytes_read < st.st_size)
+//                 {
+//                     allocator->deallocate(block.data, block.size);
+//                 }
+//                 else
+//                 {
+//                     result = block;
+//                 }
+//             }
+//         }
+//         close(fd);
+//     }
 
-    return result;
-}
+//     return result;
+// }
 
 // int load_file(byte *buffer, usize buffer_size, char const *filename)
 // {

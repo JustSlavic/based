@@ -1,64 +1,101 @@
 #include "web.hpp"
-#include "util.hpp"
 
+static char to_hex_table[16] = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+};
+static int8 from_hex_table[128] = {
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
+   -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+};
 
-char to_hex_table[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 int web::url_encode(memory_buffer from, memory_buffer to)
 {
-    int cursor = 0;
-    for (usize index = 0; index < from.size; index++)
+    uint32 cursor_from = 0;
+    uint32 cursor_to = 0;
+
+    while ((cursor_from < from.size) && (cursor_to < to.size))
     {
-        char c = from.data[index];
-        if (is_ascii_alpha(c) ||
-            is_ascii_digit(c) ||
+        char c = from.data[cursor_from++];
+        if (('A' <= c && c <= 'Z') ||
+            ('a' <= c && c <= 'z') ||
+            ('0' <= c && c <= '9') ||
             c == '-' ||
             c == '_' ||
             c == '.' ||
             c == '~')
         {
-            to.data[cursor++] = c;
+            to.data[cursor_to++] = c;
+        }
+        else if (c == ' ')
+        {
+            to.data[cursor_to++] = '+';
         }
         else
         {
-            to.data[cursor++] = '%';
-            int n1 = (c >> 4);
-            int n2 = (c & 0xf);
-            to.data[cursor++] = (n1 < 16) ? to_hex_table[n1] : '?';
-            to.data[cursor++] = (n2 < 16) ? to_hex_table[n2] : '?';
+            if (cursor_to + 3 < to.size)
+            {
+                to.data[cursor_to++] = '%';
+
+                int n1 = (c >> 4) & 0xf;
+                to.data[cursor_to++] = (n1 < 16) ? to_hex_table[n1] : '%';
+
+                int n2 = (c & 0xf);
+                to.data[cursor_to++] = (n2 < 16) ? to_hex_table[n2] : '%';
+            }
         }
     }
-    return cursor;
+    return cursor_to;
 }
 
 int web::url_decode(memory_buffer from, memory_buffer to)
 {
-    int cursor = 0;
-    usize index = 0;
-    while (index < from.size)
+    uint32 cursor_from = 0;
+    uint32 cursor_to = 0;
+
+    while ((cursor_from < from.size) && (cursor_to < to.size))
     {
-        char c = from.data[index++];
+        char c = from.data[cursor_from++];
         if (c == '%')
         {
-            char n1 = from.data[index++];
-            char n2 = from.data[index++];
-            if (is_ascii_hex(n1) && is_ascii_hex(n2))
+            if (cursor_from + 2 <= from.size)
             {
-                to.data[cursor++] = (from_hex(n1) << 4) | from_hex(n2);
-            }
-            else
-            {
-                break;
+                char c1 = from.data[cursor_from++];
+                char c2 = from.data[cursor_from++];
+
+                int n1 = from_hex_table[(int)c1];
+                int n2 = from_hex_table[(int)c2];
+
+                if (n1 < 0 || n2 < 0) break;
+
+                to.data[cursor_to++] = (n1 << 4) | n2;
             }
         }
         else if (c == '+')
         {
-            to.data[cursor++] = ' ';
+            to.data[cursor_to++] = ' ';
+        }
+        else if (('A' <= c && c <= 'Z') ||
+                 ('a' <= c && c <= 'z') ||
+                 ('0' <= c && c <= '9') ||
+                 c == '-' ||
+                 c == '_' ||
+                 c == '.' ||
+                 c == '~')
+        {
+            to.data[cursor_to++] = c;
         }
         else
         {
-            to.data[cursor++] = c;
+            break;
         }
     }
 
-    return cursor;
+    return cursor_to;
 }
+

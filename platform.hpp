@@ -3,15 +3,21 @@
 
 #include "base.h"
 #include "memory_buffer.hpp"
+#include "time.hpp"
 
 
 namespace platform
 {
 
-
-memory_buffer allocate_pages(void *base, usize size);
-memory_buffer allocate_pages(usize size);
+[[nodiscard]] memory_buffer allocate_pages(void *base, usize size);
+[[nodiscard]] memory_buffer allocate_pages(usize size);
 int deallocate_pages(memory_buffer);
+
+namespace wall_clock
+{
+    [[nodiscard]] int64 frequency();
+    [[nodiscard]] timepoint now();
+} // namespace wall_clock
 
 
 } // namespace platform
