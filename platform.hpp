@@ -2,7 +2,7 @@
 #define PLATFORM_HPP
 
 #include "base.h"
-#include "memory_buffer.hpp"
+#include "memory/buffer.hpp"
 #include "time.hpp"
 
 

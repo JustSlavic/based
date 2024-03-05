@@ -3,7 +3,7 @@
 
 
 #include "base.h"
-#include "memory_buffer.hpp"
+#include "memory/buffer.hpp"
 
 
 template <typename T>

@@ -2,7 +2,7 @@
 #define BASED__MEMORY_ALLOCATOR_H
 
 #include "base.h"
-#include "memory_buffer.hpp"
+#include "buffer.hpp"
 #include "array.hpp"
 
 
