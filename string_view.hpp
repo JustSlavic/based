@@ -2,8 +2,8 @@
 #define BASED__STRING_VIEW
 
 #include "base.h"
-#include "memory.hpp"
-#include "memory_buffer.hpp"
+#include "memory/memory.hpp"
+#include "memory/buffer.hpp"
 
 
 struct string_view
