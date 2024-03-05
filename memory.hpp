@@ -7,7 +7,6 @@
 FORCE_INLINE
 usize get_padding(void *pointer, usize alignment)
 {
-    // @todo: check if we can delete final '& (alignment - 1)'
     usize result = (alignment - ((usize)pointer & (alignment - 1))) & (alignment - 1);
     return result;
 }

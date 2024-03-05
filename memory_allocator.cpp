@@ -124,8 +124,7 @@ memory_allocator memory_allocator::make_pool(memory_buffer memory, uint32 chunk_
     ASSERT(get_padding(memory.data, alignof(void *)) == 0);
 
     // Chunk size is rounded up to the closest 8-byte boundary
-
-    chunk_size += (alignof(void *) - (chunk_size & alignof(void *)));
+    chunk_size += get_padding(memory.data, alignof(void *));
 
     // Assuming the memory.data is on the 8-byte boundary, and
     // chunk size `mod` 8 == 0, I can safely allocate all chunks
