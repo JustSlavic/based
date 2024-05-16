@@ -5,11 +5,7 @@
 #include "vector3.hpp"
 
 
-#define V4_1(xyzw) vector4{ (float32) (xyzw), (float32) (xyzw), (float32) (xyzw), (float32) (xyzw) }
-#define V4_2(xyz, w) vector4{ (xyz).x, (xyz).y, (xyz).z, (float32) (w) }
-#define V4_3(xy, z, w) vector4{ (xy).x, (xy).y, (float32) z, (float32) (w) }
-#define V4_4(x, y, z, w) vector4{ (float32) (x), (float32) (y), (float32) (z), (float32) (w) }
-#define V4(...) MACRO_EXPAND(MACRO_OVERLOAD_4(__VA_ARGS__, V4_4, V4_3, V4_2, V4_1)(__VA_ARGS__))
+#define V4 make_vector4
 
 struct vector4
 {
@@ -31,6 +27,40 @@ struct vector4
         return e[index];
     }
 };
+
+FORCE_INLINE vector4 make_vector4(float32 x, float32 y, float32 z, float32 w)
+{
+    vector4 result;
+    result.x = x;
+    result.y = y;
+    result.z = z;
+    result.w = w;
+    return result;
+}
+
+FORCE_INLINE vector4 make_vector4(vector2 xy, float32 z, float32 w)
+{
+    vector4 result;
+    result.xy = xy;
+    result.z = z;
+    result.w = w;
+    return result;
+}
+
+FORCE_INLINE vector4 make_vector4(vector3 xyz, float32 w)
+{
+    vector4 result;
+    result.xyz = xyz;
+    result.w = w;
+    return result;
+}
+
+FORCE_INLINE vector4 make_vector4(float32 t)
+{
+    vector4 result;
+    result.x = result.y = result.z = result.w = t;
+    return result;
+}
 
 FORCE_INLINE vector4 & operator += (vector4 & a, vector4 b) { a.x += b.x; a.y += b.y; a.z += b.z; a.w += b.w; return a; }
 FORCE_INLINE vector4 & operator -= (vector4 & a, vector4 b) { a.x -= b.x; a.y -= b.y; a.z -= b.z; a.w -= b.w; return a; }

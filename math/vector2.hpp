@@ -5,9 +5,7 @@
 #include "float32.h"
 
 
-#define V2_1(c) vector2{ (float32) (c), (float32) (c) }
-#define V2_2(x, y) vector2{ (float32) (x), (float32) (y) }
-#define V2(...) MACRO_EXPAND(MACRO_OVERLOAD_2(__VA_ARGS__, V2_2, V2_1)(__VA_ARGS__))
+#define V2 make_vector2
 
 struct vector2
 {
@@ -25,6 +23,21 @@ struct vector2
         return e[index];
     }
 };
+
+FORCE_INLINE vector2 make_vector2(float32 x, float32 y)
+{
+    vector2 result;
+    result.x = x;
+    result.y = y;
+    return result;
+}
+
+FORCE_INLINE vector2 make_vector2(float32 t)
+{
+    vector2 result;
+    result.x = result.y = t;
+    return result;
+}
 
 FORCE_INLINE vector2 & operator += (vector2 & a, vector2 b) { a.x += b.x; a.y += b.y; return a; }
 FORCE_INLINE vector2 & operator -= (vector2 & a, vector2 b) { a.x -= b.x; a.y -= b.y; return a; }

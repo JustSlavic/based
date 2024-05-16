@@ -123,6 +123,7 @@
     typedef double               float64;
 
     #define FORCE_INLINE         __attribute__((always_inline)) inline
+    #define DLL_EXPORT           extern
 
     #if DEBUG
         #define DEBUG_BREAK __builtin_trap
