@@ -8,21 +8,34 @@
 template <typename T>
 struct ring_buffer
 {
-    memory_block buffer;
-    uint32 cursor;   // Next position where you can write data
-    uint32 count;    // Number of elements you can read from the buffer looking back
-    uint32 capacity; // Maximum number of elements that could be in the buffer
+    memory_buffer buffer;
+    uint32 size;
+    uint32 capacity;
 
-    static ring_buffer from(void *buffer, usize size)
+    int64 it_begin;
+    int64 it_end;
+
+    static ring_buffer from(void *data, usize size)
     {
-        ring_buffer<T> result;
-        result.buffer.data = (byte *) buffer;
-        result.buffer.size = size;
-        result.cursor = 0;
-        result.count = 0;
-        result.capacity = size / sizeof(T);
+        
+    }
 
-        return result;
+    static ring_buffer from(memory_buffer buffer)
+    {
+        return ring_buffer<T>::from(buffer.data, buffer.size);
+    }
+
+    void push_back(T&& t)
+    {
+        if ((end - begin) < capacity) {
+
+        }
+    }
+
+    void push_front(T&& t)
+    {
+        if ((end - begin) < capacity) {
+            f
     }
 };
 

@@ -34,16 +34,21 @@ struct array
     const_iterator end() const { return data_ + size_; }
     const_iterator cend() const { return data_ + size_; }
 
-    static array<T> from(memory_buffer buffer)
+    static array<T> from(byte *data, usize size)
     {
         array<T> result;
 
-        auto padding = get_padding(buffer.data, alignof(T));
+        auto padding = get_padding(data, alignof(T));
 
-        result.data_ = (T *) (buffer.data + padding);
+        result.data_ = (T *) (data + padding);
         result.size_ = 0;
-        result.capacity_ = (buffer.size - padding) / sizeof(T);
+        result.capacity_ = (size - padding) / sizeof(T);
         return result;
+    }
+
+    static array<T> from(memory_buffer buffer)
+    {
+        return array<T>::from(buffer.data, buffer.size);
     }
 
     T& operator[] (usize index)

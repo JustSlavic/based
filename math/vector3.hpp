@@ -5,10 +5,7 @@
 #include "vector2.hpp"
 
 
-#define V3_1(xyz) vector3{ (float32) (xyz), (float32) (xyz), (float32) (xyz) }
-#define V3_2(xy, z) vector3{ (xy).x, (xy).y, (float32) (z) }
-#define V3_3(x, y, z) vector3{ (float32) (x), (float32) (y), (float32) (z) }
-#define V3(...) MACRO_EXPAND(MACRO_OVERLOAD_3(__VA_ARGS__, V3_3, V3_2, V3_1)(__VA_ARGS__))
+#define V3 make_vector3
 
 struct vector3
 {
@@ -27,6 +24,30 @@ struct vector3
         return e[index];
     }
 };
+
+FORCE_INLINE vector3 make_vector3(float32 x, float32 y, float32 z)
+{
+    vector3 result;
+    result.x = x;
+    result.y = y;
+    result.z = z;
+    return result;
+}
+
+FORCE_INLINE vector3 make_vector3(vector2 xy, float32 z)
+{
+    vector3 result;
+    result.xy = xy;
+    result.z = z;
+    return result;
+}
+
+FORCE_INLINE vector3 make_vector3(float32 t)
+{
+    vector3 result;
+    result.x = result.y = result.z = t;
+    return result;
+}
 
 FORCE_INLINE float32 *get_data(vector3 & a) { return &a._e1; }
 FORCE_INLINE float32 const *get_data(vector3 const & a) { return &a._e1; }
