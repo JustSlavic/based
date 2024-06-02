@@ -12,6 +12,13 @@ struct timepoint
 struct duration
 {
     uint64 us;
+
+    static duration seconds(uint64 t)
+    {
+        duration result;
+        result.us = (t * 1000000);
+        return result;
+    }
 };
 
 float64 get_seconds(timepoint t)
@@ -28,7 +35,7 @@ float64 get_seconds(duration d)
 
 INLINE duration operator - (timepoint t1, timepoint t2)
 {
-    ASSERT(t2.us < t1.us);
+    ASSERT(t2.us <= t1.us);
     duration result = { t1.us - t2.us };
     return result;
 }
@@ -39,11 +46,12 @@ INLINE timepoint operator + (timepoint t, duration d)
     return result;
 }
 
-FORCE_INLINE bool operator < (timepoint t1, timepoint t2)
-{
-    bool result = (t1.us < t2.us);
-    return result;
-}
+FORCE_INLINE bool operator <  (timepoint t1, timepoint t2) { return (t1.us <  t2.us); }
+FORCE_INLINE bool operator <= (timepoint t1, timepoint t2) { return (t1.us <= t2.us); }
+FORCE_INLINE bool operator == (timepoint t1, timepoint t2) { return (t1.us == t2.us); }
+FORCE_INLINE bool operator != (timepoint t1, timepoint t2) { return (t1.us != t2.us); }
+FORCE_INLINE bool operator >= (timepoint t1, timepoint t2) { return (t1.us >= t2.us); }
+FORCE_INLINE bool operator  > (timepoint t1, timepoint t2) { return (t1.us  > t2.us); }
 
 INLINE duration operator + (duration d1, duration d2)
 {
