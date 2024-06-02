@@ -39,6 +39,12 @@ INLINE timepoint operator + (timepoint t, duration d)
     return result;
 }
 
+FORCE_INLINE bool operator < (timepoint t1, timepoint t2)
+{
+    bool result = (t1.us < t2.us);
+    return result;
+}
+
 INLINE duration operator + (duration d1, duration d2)
 {
     duration result = { d1.us + d2.us };
@@ -51,7 +57,7 @@ INLINE duration operator - (duration d1, duration d2)
     return result;
 }
 
-INLINE bool32 operator < (duration d1, duration d2)
+INLINE bool operator < (duration d1, duration d2)
 {
     bool32 result = (d1.us < d2.us);
     return result;

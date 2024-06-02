@@ -235,5 +235,9 @@ typedef uint32               bool32;
 #define TERABYTES_FROM_BYTES(BYTES) (GIGABYTES_FROM_BYTES(BYTES) / 1024.0f)
 #define TOGGLE(X) (X) = !(X)
 
+#define GLSL(...) #__VA_ARGS__
+#define HLSL(...) #__VA_ARGS__
+#define WGSL(...) #__VA_ARGS__
+
 
 #endif // BASED__BASE_HPP

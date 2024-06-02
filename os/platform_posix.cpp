@@ -51,7 +51,7 @@ int64 wall_clock::frequency()
         }
         else
         {
-            cache = 1000000000ll / (int64) ts.tv_nsec;
+            cache = 1000000000000ll / (int64) ts.tv_nsec;
         }
     }
     return cache;
@@ -69,7 +69,7 @@ timepoint wall_clock::now()
     }
     else
     {
-        result.us = (uint64) ts.tv_sec * 1000000000ll + ts.tv_nsec;
+        result.us = (uint64) ts.tv_sec * 1000000000ll + ts.tv_nsec / 1000;
     }
 
     return result;

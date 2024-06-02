@@ -107,6 +107,13 @@ float32 lerp(float32 a, float32 b, float32 t)
     return result;
 }
 
+float32 cvt(float32 x, float32 a, float32 b, float32 c, float32 d)
+{
+    float32 y = (clamp(x, a, b) - a) * (d - c) / (b - a) + c;
+    return y;
+}
+
+
 
 #endif // BASED__FLOATING_H
 
