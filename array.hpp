@@ -102,6 +102,9 @@ struct static_array
     void clear() { size_ = 0; }
     bool empty() { return (size_ == 0); }
 
+    void resize(usize n) { size_ = n; memset(data_, 0, sizeof(T) * n); }
+    void resize(usize n, T def_val) { size_ = n; for (int i = 0; i < n; i++) data_[i] = def_val; }
+
     iterator begin() { return data_; }
     const_iterator begin() const { return data_; }
     const_iterator cbegin() const { return data_; }
