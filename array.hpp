@@ -81,6 +81,19 @@ struct array
             data_[size_++] = t;
         }
     }
+
+    void push_front(T t)
+    {
+        if (size_ < capacity_)
+        {
+            for (int i = size_; i > 0; i--)
+            {
+                data_[i] = data_[i - 1];
+            }
+            data_[0] = t;
+            size_ += 1;
+        }
+    }
 };
 
 

@@ -4,6 +4,7 @@
 #include "base.h"
 #include "buffer.hpp"
 #include "array.hpp"
+#include "string.hpp"
 
 
 struct memory_allocator
@@ -40,6 +41,8 @@ struct memory_allocator
 
     template <typename T>
     array<T> allocate_array_open(usize count);
+
+    string allocate_string(usize count);
 
     memory_buffer allocate_copy(void *, usize);
 
@@ -83,6 +86,12 @@ array<T> memory_allocator::allocate_array_open(usize count)
 {
     auto result = allocate_array<T>(count);
     result.resize(count);
+    return result;
+}
+
+string memory_allocator::allocate_string(usize size)
+{
+    auto result = allocate_array<char>(size);
     return result;
 }
 
