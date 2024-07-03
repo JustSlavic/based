@@ -158,6 +158,20 @@ struct static_array
         }
     }
 
+    void erase(T t)
+    {
+        int i = 0;
+        for (; i < size_; i++)
+        {
+            if (data_[i] == t) break;
+        }
+        for (; i < (size_ - 1); i++)
+        {
+            data_[i] = data_[i + 1];
+        }
+        size_ -= 1;
+    }
+
     void erase_not_sorted(usize index)
     {
         if (index < size_)
