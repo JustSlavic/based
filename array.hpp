@@ -251,7 +251,17 @@ template <typename T, typename Allocator>
 FORCE_INLINE void
 array_base<T, Allocator>::resize(size_type n)
 {
-    // @todo
+    if (n < size())
+        for (int i = 0; i < (size() - n); i++)
+            (data() + n + i)->~value_type();
+
+    if (n > capacity())
+    {
+        bool grown = m_allocator.grow(n);
+        ASSERT_MSG(grown, "array_base::resize() could not grow internal allocator");
+        if (!grown) return;
+    }
+    m_size = n;
 }
 
 /*
@@ -354,8 +364,7 @@ FORCE_INLINE void array_base<T, Allocator>::push_back(const_reference value) noe
         bool grown = m_allocator.grow();
         ASSERT_MSG(grown, "array_base::push_back() could not grow internal allocator");
     }
-    pointer p = ::new((void *) (m_allocator.data() + m_size++)) value_type(value);
-    return *p;
+    ::new((void *) (m_allocator.data() + m_size++)) value_type(value);
 }
 
 template <typename T, typename Allocator>
@@ -366,7 +375,7 @@ FORCE_INLINE void array_base<T, Allocator>::push_back(value_type&& value) noexce
         bool grown = m_allocator.grow();
         ASSERT_MSG(grown, "array_base::push_back() could not grow internal allocator");
     }
-    pointer p = ::new((void *) (m_allocator.data() + m_size++)) value_type(type::move(value));
+    ::new((void *) (m_allocator.data() + m_size++)) value_type(type::move(value));
 }
 
 template <typename T, typename Allocator>
@@ -568,6 +577,7 @@ struct array_memory_static
     const_pointer data() const noexcept;
     size_type capacity() const noexcept;
     bool          grow() noexcept;
+    bool          grow(size_type at_least) noexcept;
 };
 
 // template <typename T, size_type N>
@@ -609,12 +619,41 @@ array_memory_static<T, N>::grow() noexcept
     ASSERT_FAIL("Could not grow static array!");
 }
 
+template <typename T, size_type N>
+FORCE_INLINE bool
+array_memory_static<T, N>::grow(size_type at_least) noexcept
+{
+    ASSERT_FAIL("Could not grow static array!");
+}
 
 } // namespace internal
 
 
 template <typename T, typename internal::size_type N>
 using static_array = internal::array_base<T, internal::array_memory_static<T, N>>;
+
+template <typename internal::size_type N, typename T, typename... U>
+static_array<T, N> make_static_array(T t, U... ts)
+{
+    static_array<T, N> result = {{ t, ts... }};
+    result.m_size = 1 + sizeof...(ts);
+    return result;
+}
+
+template <typename internal::size_type N, typename T>
+static_array<T, N> make_static_array(T t)
+{
+    static_array<T, N> result = {{ t }};
+    result.m_size = 1;
+    return result;
+}
+
+template <typename internal::size_type N, typename T>
+static_array<T, N> make_static_array()
+{
+    static_array<T, N> result = {};
+    return result;
+}
 
 
 

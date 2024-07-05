@@ -36,13 +36,13 @@ struct memory_allocator
     memory_buffer allocate_buffer(usize size);
     memory_buffer allocate_buffer(usize size, usize alignment);
 
-    template <typename T>
-    array<T> allocate_array(usize count);
+    // template <typename T>
+    // array<T> allocate_array(usize count);
 
-    template <typename T>
-    array<T> allocate_array_open(usize count);
+    // template <typename T>
+    // array<T> allocate_array_open(usize count);
 
-    string allocate_string(usize count);
+    // string allocate_string(usize count);
 
     memory_buffer allocate_copy(void *, usize);
 
@@ -74,26 +74,26 @@ memory_allocator *mallocator();
 struct memory_allocator__report memory_allocator__report(memory_allocator a);
 
 
-template <typename T>
-array<T> memory_allocator::allocate_array(usize count)
-{
-    auto result = array<T>::from(allocate_buffer(sizeof(T) * count));
-    return result;
-}
+// template <typename T>
+// array<T> memory_allocator::allocate_array(usize count)
+// {
+//     auto result = array<T>::from(allocate_buffer(sizeof(T) * count));
+//     return result;
+// }
 
-template <typename T>
-array<T> memory_allocator::allocate_array_open(usize count)
-{
-    auto result = allocate_array<T>(count);
-    result.resize(count);
-    return result;
-}
+// template <typename T>
+// array<T> memory_allocator::allocate_array_open(usize count)
+// {
+//     auto result = allocate_array<T>(count);
+//     result.resize(count);
+//     return result;
+// }
 
-string memory_allocator::allocate_string(usize size)
-{
-    auto result = allocate_array<char>(size);
-    return result;
-}
+// string memory_allocator::allocate_string(usize size)
+// {
+//     auto result = allocate_array<char>(size);
+//     return result;
+// }
 
 
 #endif // BASED__MEMORY_ALLOCATOR_H
