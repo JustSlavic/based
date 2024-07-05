@@ -5,7 +5,7 @@
 #include <array.hpp>
 
 
-using string = array<char>;
+// using string = array_base<char>;
 
 
 #endif // BASED__STRING_HPP
