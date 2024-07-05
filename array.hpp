@@ -252,7 +252,7 @@ FORCE_INLINE void
 array_base<T, Allocator>::resize(size_type n)
 {
     if (n < size())
-        for (int i = 0; i < (size() - n); i++)
+        for (uint32 i = 0; i < (size() - n); i++)
             (data() + n + i)->~value_type();
 
     if (n > capacity())
