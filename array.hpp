@@ -74,6 +74,9 @@ struct array_base
     iterator erase(const_iterator first, const_iterator last);
     iterator erase_unsorted(const_iterator position);
 
+    iterator erase_first(const_reference value);
+    iterator erase_first_unsorted(const_reference value);
+
     void clear() noexcept;
     void deallocate() noexcept;
 };
@@ -387,7 +390,7 @@ template <typename T, typename Allocator>
 FORCE_INLINE typename array_base<T, Allocator>::iterator
 array_base<T, Allocator>::erase_unsorted(const_iterator position)
 {
-    ASSERT_MSG(begin() <= position && position < end(), "vector_base::erase(position) with invalid position");
+    ASSERT_MSG(begin() <= position && position < end(), "vector_base::erase_unsorted(position) with invalid position");
 
     auto result = (iterator) position;
 
@@ -399,6 +402,28 @@ array_base<T, Allocator>::erase_unsorted(const_iterator position)
     m_size -= 1;
 
     return result;
+}
+
+template <typename T, typename Allocator>
+FORCE_INLINE typename array_base<T, Allocator>::iterator
+array_base<T, Allocator>::erase_first(const_reference value)
+{
+    iterator it = begin();
+    for (; it != end(); it++)
+        if (*it == value) break;
+
+    return erase(it);
+}
+
+template <typename T, typename Allocator>
+FORCE_INLINE typename array_base<T, Allocator>::iterator
+array_base<T, Allocator>::erase_first_unsorted(const_reference value)
+{
+    iterator it = begin();
+    for (; it != end(); it++)
+        if (*it == value) break;
+
+    return erase_unsorted(it);
 }
 
 template <typename T, typename Allocator>
