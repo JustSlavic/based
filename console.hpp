@@ -2,7 +2,10 @@
 #define CONSOLE_HPP
 
 #include <base.h>
-
+#if OS_LINUX || OS_MAC
+#include <stdio.h>
+#elif OS_WINDOWS
+#endif
 
 namespace console {
 
