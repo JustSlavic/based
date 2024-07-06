@@ -8,7 +8,7 @@ namespace console {
 
 #if OS_WINDOWS
 void print(...) {}
-#elif OS_MAC
+#elif OS_MAC || OS_LINUX
 void print(char const *fmt, ...)
 {
     va_list args;

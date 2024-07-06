@@ -158,7 +158,7 @@ array_base<T, Allocator>::resize(size_type n, const_reference value)
     }
 
     if (n > m_size)
-        for (int i = m_size; i < n; i++)
+        for (size_type i = m_size; i < n; i++)
             *(m_allocator.data() + i) = value;
 
     m_size = n;
@@ -321,7 +321,7 @@ array_base<T, Allocator>::insert(const_iterator position, value_type&& value)
 
     size_type n = position - begin();
     if (size() == capacity()) m_allocator.grow();
-    for (int i = size(); i > n; i--)
+    for (size_type i = size(); i > n; i--)
         *(m_allocator.data() + i) = type::move(*(m_allocator.data() + i - 1));
     *(m_allocator.data() + n) = type::move(value);
     m_size++;
@@ -336,9 +336,9 @@ array_base<T, Allocator>::insert(const_iterator position, size_type count, const
 
     size_type n = position - begin();
     if (size() + count >= capacity()) m_allocator.grow();
-    for (int i = size() + count; i > n + count; i--)
+    for (size_type i = size() + count; i > n + count; i--)
         *(m_allocator.data() + i - 1) = type::move(*(m_allocator.data() + i - count - 1));
-    for (int i = n; i < n + count; i++)
+    for (size_type i = n; i < n + count; i++)
         ::new(m_allocator.data() + i) value_type(value);
     m_size += count;
     return begin() + n;
@@ -404,7 +404,7 @@ array_base<T, Allocator>::erase_unsorted(const_iterator position)
 template <typename T, typename Allocator>
 FORCE_INLINE void array_base<T, Allocator>::clear() noexcept
 {
-    for (int i = 0; i < m_size; i++)
+    for (size_type i = 0; i < m_size; i++)
         (m_allocator.data() + i)->~value_type();
     m_size = 0;
 }
