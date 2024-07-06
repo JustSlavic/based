@@ -3,8 +3,6 @@
 
 #include "base.h"
 #include "buffer.hpp"
-#include "array.hpp"
-#include "string.hpp"
 
 
 struct memory_allocator

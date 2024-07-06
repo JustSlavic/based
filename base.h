@@ -206,7 +206,8 @@ typedef uint32               bool32;
 
 #ifdef DEBUG
     #define ASSERT(COND)          do {if (COND) {} else { DEBUG_BREAK(); }} while(false)
-    #define ASSERT_MSG(COND, ...) do {if (COND) {} else { DEBUG_BREAK(); }} while(false)
+    #define ASSERT_MSG(COND, ...) do {if (COND) {} else { \
+        console::print("%s", __VA_ARGS__); DEBUG_BREAK(); }} while(false)
 #else
     #define ASSERT(COND)          (void)(0)
     #define ASSERT_MSG(COND, ...) (void)(0)

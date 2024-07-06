@@ -386,7 +386,7 @@ memory_buffer memory_allocator::allocate_buffer_(usize size, usize alignment)
         break;
 
         default:
-            ASSERT_FAIL();
+            ASSERT_FAIL("Unknown kind of allocator");
     }
     return result;
 }
@@ -434,7 +434,7 @@ void memory_allocator::deallocate(void *p, usize size)
         break;
 
         default:
-            ASSERT_FAIL();
+            ASSERT_FAIL("Unknown kind of allocator");
     }
 }
 
@@ -469,7 +469,7 @@ void memory_allocator::reset()
         break;
 
         default:
-            ASSERT_FAIL();
+            ASSERT_FAIL("memory_allocator::reset() - unknown kind of allocator");
     }
 }
 
@@ -506,7 +506,7 @@ memory_allocator::report memory_allocator::get_report()
         break;
 
         default:
-            ASSERT_FAIL();
+            ASSERT_FAIL("memory_allocator::get_report() - unknown kind of allocator");
     }
     return result;
 }
