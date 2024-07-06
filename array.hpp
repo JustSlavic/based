@@ -305,7 +305,7 @@ template <typename T, typename Allocator>
 FORCE_INLINE typename array_base<T, Allocator>::iterator
 array_base<T, Allocator>::insert(const_iterator position, const_reference value)
 {
-    ASSERT_MSG(begin() <= position && position < end(), "array_base::insert(position) with invalid position");
+    ASSERT_MSG(begin() <= position && position <= end(), "array_base::insert(position) with invalid position");
 
     size_type n = position - begin();
     if (size() == capacity()) m_allocator.grow();
@@ -320,7 +320,7 @@ template <typename T, typename Allocator>
 FORCE_INLINE typename array_base<T, Allocator>::iterator
 array_base<T, Allocator>::insert(const_iterator position, value_type&& value)
 {
-    ASSERT_MSG(begin() <= position && position < end(), "array_base::insert(position) with invalid position");
+    ASSERT_MSG(begin() <= position && position <= end(), "array_base::insert(position) with invalid position");
 
     size_type n = position - begin();
     if (size() == capacity()) m_allocator.grow();
@@ -335,7 +335,7 @@ template <typename T, typename Allocator>
 FORCE_INLINE typename array_base<T, Allocator>::iterator
 array_base<T, Allocator>::insert(const_iterator position, size_type count, const_reference value)
 {
-    ASSERT_MSG(begin() <= position && position < end(), "array_base::insert(position) with invalid position");
+    ASSERT_MSG(begin() <= position && position <= end(), "array_base::insert(position) with invalid position");
 
     size_type n = position - begin();
     if (size() + count >= capacity()) m_allocator.grow();
@@ -591,6 +591,13 @@ using array = internal::array_base<T, internal::array_memory_dynamic_non_resizea
 
 template <typename T>
 using dynamic_array = internal::array_base<T, internal::array_memory_dynamic_resizeable<T>>;
+
+template <typename internal::size_type N>
+using static_string = static_array<char, N>;
+
+using string = array<char>;
+
+using dynamic_string = dynamic_array<char>;
 
 template <typename internal::size_type N, typename T, typename... U>
 static_array<T, N> make_static_array(T t, U... ts)
