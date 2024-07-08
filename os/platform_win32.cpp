@@ -7,9 +7,9 @@ namespace platform
 
 memory_buffer allocate_pages(void *base, usize size)
 {
-    memory_buffer result;
+    memory_buffer result = {};
 
-    void *memory = VirtualAlloc(base_address, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void *memory = VirtualAlloc(base, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     if (memory != NULL)
     {
         result.data = (byte *) memory;
@@ -26,6 +26,7 @@ memory_buffer allocate_pages(usize size)
 int deallocate_pages(memory_buffer buffer)
 {
     VirtualFree(buffer.data, buffer.size, MEM_RELEASE);
+    return 0;
 }
 
 timepoint wall_clock::now()
@@ -71,7 +72,7 @@ int load_file(char const *filename, memory_buffer buffer)
 
 memory_buffer load_file(char const *filename, memory_allocator *a)
 {
-    memory_buffer Result = {}
+    memory_buffer Result = {};
 
     HANDLE FileHandle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (FileHandle != INVALID_HANDLE_VALUE)
@@ -80,7 +81,7 @@ memory_buffer load_file(char const *filename, memory_allocator *a)
         BOOL GetSizeResult = GetFileSizeEx(FileHandle, &FileSize);
         if (GetSizeResult == TRUE)
         {
-            Result = a->allocate_buffer(FileSize.QuadPart)
+            Result = a->allocate_buffer(FileSize.QuadPart);
             if (Result)
             {
                 DWORD BytesRead;
@@ -88,7 +89,7 @@ memory_buffer load_file(char const *filename, memory_allocator *a)
                 if (ReadFileResult == FALSE)
                 {
                     a->deallocate(Result);
-                    memset(&Result, 0, sizeof(memory_block));
+                    // memset(&Result, 0, sizeof(memory_block));
                 }
             }
         }

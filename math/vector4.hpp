@@ -5,7 +5,11 @@
 #include "vector3.hpp"
 
 
-#define V4 make_vector4
+#define V4_1(xyzw) make_vector4( (float32) (xyzw), (float32) (xyzw), (float32) (xyzw), (float32) (xyzw) )
+#define V4_2(xyz, w) make_vector4( (xyz).x, (xyz).y, (xyz).z, (float32) (w) )
+#define V4_3(xy, z, w) make_vector4( (xy).x, (xy).y, (float32) z, (float32) (w) )
+#define V4_4(x, y, z, w) make_vector4( (float32) (x), (float32) (y), (float32) (z), (float32) (w) )
+#define V4(...) MACRO_EXPAND(MACRO_OVERLOAD_4(__VA_ARGS__, V4_4, V4_3, V4_2, V4_1)(__VA_ARGS__))
 
 struct vector4
 {

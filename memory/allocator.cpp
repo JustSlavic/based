@@ -89,7 +89,6 @@ void              mallocator__deallocate (void *p);
 memory_allocator memory_allocator::make_arena(memory_buffer memory)
 {
     memory_allocator result = { ARENA };
-    if (sizeof(opaque) >= sizeof(memory_arena))
     {
         memset(result.opaque, 0, sizeof(opaque));
 
@@ -124,11 +123,10 @@ memory_allocator memory_allocator::make_pool(memory_buffer memory, uint32 chunk_
     ASSERT(get_padding(memory.data, alignof(void *)) == 0);
 
     // Chunk size is rounded up to the closest 8-byte boundary
-    chunk_size += get_padding(memory.data, alignof(void *));
+    chunk_size += (uint32) get_padding(memory.data, alignof(void *));
 
     // Assuming the memory.data is on the 8-byte boundary, and
     // chunk size `mod` 8 == 0, I can safely allocate all chunks
-    if (sizeof(opaque) >= sizeof(memory_pool))
     {
         memset(result.opaque, 0, sizeof(opaque));
 

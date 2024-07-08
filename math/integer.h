@@ -13,6 +13,11 @@ int16 absolute(int16 x) { return x < 0 ? -x : x; }
 int32 absolute(int32 x) { return x < 0 ? -x : x; }
 int64 absolute(int64 x) { return x < 0 ? -x : x; }
 
+int8  clamp(int8  x, int8  a, int8  b) { return (x < a ? a : (x > b ? b : x)); }
+int16 clamp(int16 x, int16 a, int16 b) { return (x < a ? a : (x > b ? b : x)); }
+int32 clamp(int32 x, int32 a, int32 b) { return (x < a ? a : (x > b ? b : x)); }
+int64 clamp(int64 x, int64 a, int64 b) { return (x < a ? a : (x > b ? b : x)); }
+
 
 int16 int16__change_endianness(int16 n)
 {

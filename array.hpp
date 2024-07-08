@@ -523,6 +523,7 @@ FORCE_INLINE bool
 array_memory_static<T, N>::grow() noexcept
 {
     ASSERT_FAIL("Could not grow static array!");
+    return false;
 }
 
 template <typename T, size_type N>
@@ -530,6 +531,7 @@ FORCE_INLINE bool
 array_memory_static<T, N>::grow(size_type at_least) noexcept
 {
     ASSERT_FAIL("Could not grow static array!");
+    return false;
 }
 
 template <typename T, size_type N>
@@ -565,6 +567,7 @@ FORCE_INLINE bool
 array_memory_dynamic_non_resizeable<T>::grow() noexcept
 {
     ASSERT_FAIL("Could not grow non_resizeable policy array!");
+    return false;
 }
 
 template <typename T>
@@ -572,6 +575,7 @@ FORCE_INLINE bool
 array_memory_dynamic_non_resizeable<T>::grow(size_type at_least) noexcept
 {
     ASSERT_FAIL("Could not grow non_resizeable policy array!");
+    return false;
 }
 
 template <typename T>
