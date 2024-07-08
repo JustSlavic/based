@@ -19,6 +19,20 @@ struct duration
         result.us = (t * 1000000);
         return result;
     }
+
+    static duration milliseconds(uint64 t)
+    {
+        duration result;
+        result.us = (t * 1000);
+        return result;
+    }
+
+    static duration microseconds(uint64 t)
+    {
+        duration result;
+        result.us = t;
+        return result;
+    }
 };
 
 float64 get_seconds(timepoint t)
