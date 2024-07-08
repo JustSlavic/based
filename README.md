@@ -3,7 +3,7 @@
 This library is the collection of structs and functions useful to me.
 Ignore this library, if those function are not useful to you.
 
-![Tests passed](https://github.com/JustSlavic/based_test/blob/main/.github/workflows/c-cpp.yml/badge.svg)
+![Tests passed](https://github.com/JustSlavic/based_test/actions/workflows/c-cpp.yml/badge.svg)
 
 **@todo:**
 1. `serializer` is the struct that would allow to push into memory_buffer objects, like integers, strings, other memory buffers, etc.;
