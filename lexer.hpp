@@ -6,7 +6,7 @@
 #include "string_view.hpp"
 
 
-struct lexer
+struct lexer_base
 {
     typedef bool predicate_t(char);
 
@@ -16,7 +16,7 @@ struct lexer
     uint32 line;
     uint32 column;
 
-    static lexer from(void *, usize);
+    static lexer_base from(void *, usize);
 
     char get_char(int lookup = 0);
     char eat_char();

@@ -1,9 +1,9 @@
 #include "lexer.hpp"
 
 
-lexer lexer::from(void *data, usize size)
+lexer_base lexer_base::from(void *data, usize size)
 {
-    lexer result;
+    lexer_base result;
     result.buffer = memory_buffer::from(data, size);
     result.cursor = 0;
     result.line = 1;
@@ -11,7 +11,7 @@ lexer lexer::from(void *data, usize size)
     return result;
 }
 
-char lexer::get_char(int lookup)
+char lexer_base::get_char(int lookup)
 {
     char c = 0;
     if ((cursor + lookup) < buffer.size)
@@ -22,7 +22,7 @@ char lexer::get_char(int lookup)
     return c;
 }
 
-char lexer::eat_char()
+char lexer_base::eat_char()
 {
     char c = get_char();
     if (c != 0) cursor += 1;
@@ -38,7 +38,7 @@ char lexer::eat_char()
     return c;
 }
 
-void lexer::eat_crlf()
+void lexer_base::eat_crlf()
 {
     char r = get_char(0);
     char n = get_char(1);
@@ -49,13 +49,13 @@ void lexer::eat_crlf()
     }
 }
 
-char const *lexer::get_remaining_input()
+char const *lexer_base::get_remaining_input()
 {
     char const *result = (char const *) (buffer.data + cursor);
     return result;
 }
 
-int lexer::eat_string(char const *cstr)
+int lexer_base::eat_string(char const *cstr)
 {
     int length = 0;
     char const *input = get_remaining_input();
@@ -73,7 +73,7 @@ int lexer::eat_string(char const *cstr)
     return 0;
 }
 
-int lexer::eat_string(char const *cstr, usize size)
+int lexer_base::eat_string(char const *cstr, usize size)
 {
     char const *input = get_remaining_input();
     while (size-->0 && *input && *cstr && *input == *cstr)
@@ -89,7 +89,7 @@ int lexer::eat_string(char const *cstr, usize size)
     return 0;
 }
 
-int lexer::consume_while(predicate_t *predicate)
+int lexer_base::consume_while(predicate_t *predicate)
 {
     int count = 0;
     char c = get_char();
@@ -102,7 +102,7 @@ int lexer::consume_while(predicate_t *predicate)
     return count;
 }
 
-int lexer::consume_until(predicate_t *predicate)
+int lexer_base::consume_until(predicate_t *predicate)
 {
     int count = 0;
     char c = get_char();
