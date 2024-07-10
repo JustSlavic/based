@@ -65,6 +65,12 @@ struct array_base
     void      push_back(value_type&& value) noexcept;
     void      pop_back() noexcept;
 
+    template<class... Args>
+    iterator emplace(const_iterator position, Args&&... args);
+
+    template<class... Args>
+    reference emplace_back(Args&&... args);
+
     iterator insert(const_iterator position, const_reference value);
     iterator insert(const_iterator position, value_type&& value);
     iterator insert(const_iterator position, size_type n, const_reference value);
@@ -299,6 +305,36 @@ FORCE_INLINE void array_base<T, Allocator>::pop_back() noexcept
     ASSERT_MSG(size() > 0, "array_base::pop_back() on empty array");
     m_size--;
     (m_allocator.data() + size())->~value_type(); // Call destructor in case it's not POD
+}
+
+template <typename T, typename Allocator>
+template<class... Args>
+FORCE_INLINE typename array_base<T, Allocator>::iterator
+array_base<T, Allocator>::emplace(const_iterator position, Args&&... args)
+{
+    ASSERT_MSG(begin() <= position && position <= end(), "array_base::insert(position) with invalid position");
+
+    size_type n = position - begin();
+    if (size() == capacity()) m_allocator.grow();
+    for (int i = size(); i > n; i--)
+        *(m_allocator.data() + i) = type::move(*(m_allocator.data() + i - 1));
+    ::new(m_allocator.data() + n) value_type(type::forward<Args>(args)...);
+    m_size++;
+    return begin() + n;
+}
+
+template <typename T, typename Allocator>
+template<class... Args>
+FORCE_INLINE typename array_base<T, Allocator>::reference
+array_base<T, Allocator>::emplace_back(Args&&... args)
+{
+    if (size() >= m_allocator.capacity())
+    {
+        bool grown = m_allocator.grow();
+        ASSERT_MSG(grown, "array_base::push_back() could not grow internal allocator");
+    }
+    pointer p = ::new((void *) (m_allocator.data() + m_size++)) value_type(type::forward<Args>(args)...);
+    return *p;
 }
 
 template <typename T, typename Allocator>
@@ -612,10 +648,10 @@ static_array<T, N> make_static_array(T t, U... ts)
 }
 
 template <typename internal::size_type N, typename T>
-static_array<T, N> make_static_array(T t)
+static_array<T, N> make_static_array(T &&t)
 {
-    static_array<T, N> result = {{ t }};
-    result.m_size = 1;
+    static_array<T, N> result = {};
+    result.emplace_back(std::forward<T>(t));
     return result;
 }
 

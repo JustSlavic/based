@@ -20,9 +20,25 @@ using false_type = constant<bool, false>;
 template <typename T, typename U> struct is_same       : false_type {};
 template <typename T>             struct is_same<T, T> : true_type  {};
 
+template <typename T> struct is_lvalue_reference     : false_type {};
+template <typename T> struct is_lvalue_reference<T&> : true_type {};
+
 template <typename T> struct remove_reference     { typedef T type; };
 template <typename T> struct remove_reference<T&> { typedef T type; };
 template <typename T> struct remove_reference<T&&>{ typedef T type; };
+
+template <typename T>
+T&& forward(typename remove_reference<T>::type& x) noexcept
+{
+    return static_cast<T&&>(x);
+}
+
+template <typename T>
+T&& forward(typename remove_reference<T>::type&& x) noexcept
+{
+    static_assert(!is_lvalue_reference<T>::value, "type::forward<T>(); T isn't lvalue reference.");
+    return static_cast<T&&>(x);
+}
 
 template <typename T>
 typename remove_reference<T>::type&& move(T&& x) noexcept
