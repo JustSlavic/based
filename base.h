@@ -163,7 +163,8 @@
     typedef uint64               usize;
     typedef int64                intptr;
     typedef uint64               uintptr;
-    #ifndef INT64_MAX
+
+    #if !OS_WINDOWS
         #define INT64_MAX            0x7FFFFFFFFFFFFFFF
         #define INT64_MIN            0x8000000000000000
         #define UINT64_MIN           0
