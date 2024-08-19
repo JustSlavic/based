@@ -10,6 +10,7 @@
 namespace internal {
 
 
+struct memory_allocator;
 typedef usize size_type;
 
 

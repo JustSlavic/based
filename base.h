@@ -56,7 +56,6 @@
         #define DEBUG_BREAK
     #endif // DEBUG
 
-
     #define FORCE_INLINE __forceinline
     #define DLL_EXPORT __declspec(dllexport)
     #define DEBUG_CYCLE_COUNT __rdtsc

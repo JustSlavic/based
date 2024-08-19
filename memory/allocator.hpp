@@ -3,6 +3,7 @@
 
 #include "base.h"
 #include "buffer.hpp"
+#include "array.hpp"
 
 
 struct memory_allocator
@@ -17,9 +18,9 @@ struct memory_allocator
         MALLOC,
     } kind;
 
-    uint64 opaque[8];
+    void *opaque;
 
-    static memory_allocator make_arena(memory_buffer);
+    static memory_allocator make_arena(memory_buffer, memory_allocator *parent = NULL);
     memory_allocator allocate_arena(usize size);
 
     static memory_allocator make_pool(memory_buffer buffer, uint32 chunk_size);
@@ -34,13 +35,9 @@ struct memory_allocator
     memory_buffer allocate_buffer(usize size);
     memory_buffer allocate_buffer(usize size, usize alignment);
 
-    // template <typename T>
-    // array<T> allocate_array(usize count);
-
-    // template <typename T>
-    // array<T> allocate_array_open(usize count);
-
-    // string allocate_string(usize count);
+    template <typename T>
+    array<T> allocate_array(usize count);
+    string allocate_string(usize count);
 
     memory_buffer allocate_copy(void *, usize);
 
@@ -66,32 +63,36 @@ struct memory_allocator
     report get_report();
 };
 
-memory_allocator *mallocator();
+memory_allocator mallocator();
 
 
 struct memory_allocator__report memory_allocator__report(memory_allocator a);
 
+template <typename T>
+T *memory_allocator::allocate()
+{
+    memory_buffer buffer = allocate_buffer(sizeof(T), alignof(T));
+    return (T *) buffer.data;
+}
 
-// template <typename T>
-// array<T> memory_allocator::allocate_array(usize count)
-// {
-//     auto result = array<T>::from(allocate_buffer(sizeof(T) * count));
-//     return result;
-// }
+template <typename T>
+void memory_allocator::deallocate(T *t)
+{
+    deallocate(t, sizeof(T));
+}
 
-// template <typename T>
-// array<T> memory_allocator::allocate_array_open(usize count)
-// {
-//     auto result = allocate_array<T>(count);
-//     result.resize(count);
-//     return result;
-// }
+template <typename T>
+array<T> memory_allocator::allocate_array(usize count)
+{
+    array<T> result = make_array<T>(allocate_buffer(count * sizeof(T)));
+    return result;
+}
 
-// string memory_allocator::allocate_string(usize size)
-// {
-//     auto result = allocate_array<char>(size);
-//     return result;
-// }
+string memory_allocator::allocate_string(usize size)
+{
+    string result = make_array<char>(allocate_buffer(size));
+    return result;
+}
 
 
 #endif // BASED__MEMORY_ALLOCATOR_H
