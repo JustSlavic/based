@@ -2,6 +2,7 @@
 #define BASED__ARRAY_HPP
 
 #include "base.h"
+#include "console.hpp"
 #include "compile_time.hpp"
 #include "memory/allocator.hpp"
 #include <new>
