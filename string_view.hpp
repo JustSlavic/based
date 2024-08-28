@@ -11,6 +11,34 @@ struct string_view
     char const *data;
     usize size;
 
+    string_view() = default;
+    string_view(string_view const &) = default;
+    string_view(string_view &&) = default;
+
+    FORCE_INLINE
+    string_view & operator = (string_view const & s)
+    {
+        data = s.data;
+        size = s.size;
+        return *this;
+    }
+
+    FORCE_INLINE
+    string_view & operator = (string_view && s)
+    {
+        data = s.data;
+        size = s.size;
+        return *this;
+    }
+
+    FORCE_INLINE
+    string_view & operator = (char const *s)
+    {
+        data = s;
+        size = cstring::size_no0(s);
+        return *this;
+    }
+
     FORCE_INLINE
     static string_view from(char const *s)
     {
