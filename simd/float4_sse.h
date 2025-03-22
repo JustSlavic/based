@@ -22,7 +22,7 @@ FORCE_INLINE float4 v_madd(float4 a, float4 b, float4 c) { return v_add(v_mul(a,
 #endif
 FORCE_INLINE float4 v_sqrt(float4 a) { return _mm_sqrt_ps(a); }
 
-FORCE_INLINE float4 v_sum(float4 a)
+FORCE_INLINE float4 v_hadd4(float4 a)
 {
     a = _mm_hadd_ps(a, a);
     a = _mm_hadd_ps(a, a);

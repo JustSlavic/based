@@ -20,15 +20,9 @@ FORCE_INLINE float4 v_add(float4 a, float4 b) { return vaddq_f32(a, b); }
 FORCE_INLINE float4 v_sub(float4 a, float4 b) { return vsubq_f32(a, b); }
 FORCE_INLINE float4 v_mul(float4 a, float4 b) { return vmulq_f32(a, b); }
 FORCE_INLINE float4 v_div(float4 a, float4 b) { return vdivq_f32(a, b); }
-FORCE_INLINE float4 v_madd(float4 a, float4 b, float4 c) { return vmlaq_f32(c, a, b); }
+FORCE_INLINE float4 v_hadd(float4 a, float4 b) { return vpaddq_f32(a, b); }
 FORCE_INLINE float4 v_sqrt(float4 a) { return vsqrtq_f32(a); }
-
-FORCE_INLINE float4 v_sum(float4 a)
-{
-    a = vpaddq_f32(a, a);
-    a = vpaddq_f32(a, a);
-    return a;
-}
+FORCE_INLINE float4 v_madd(float4 a, float4 b, float4 c) { return vmlaq_f32(c, a, b); }
 
 
 #endif // BASED__fLOAT4_ARM

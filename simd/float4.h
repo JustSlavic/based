@@ -10,7 +10,8 @@
 
 FORCE_INLINE float4 v_dot(float4 a, float4 b)
 {
-    float4 result = v_sum(v_mul(a, b));
+    float4 c = v_mul(a, b);
+    float4 result = v_hadd(c, c);
     return result;
 }
 

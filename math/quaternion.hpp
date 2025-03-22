@@ -14,6 +14,8 @@ struct quaternion
         struct { float32 r, i, j, k; };
         float32 e[4];
     };
+
+    FORCE_INLINE static quaternion identity() { quaternion result = {}; result.r = 1.0f; return result; }
 };
 
 FORCE_INLINE quaternion & operator += (quaternion & a, quaternion b) { a._1 += b._1; a._e12 += b._e12; a._e23 += b._e23; a._e31 += b._e31; return a; }
