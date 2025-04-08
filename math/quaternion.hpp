@@ -12,10 +12,21 @@ struct quaternion
         struct { float32 _1, _e23, _e31, _e12; };
         struct { float32 w, x, y, z; };
         struct { float32 r, i, j, k; };
+        struct { float32 pad1; vector3 axis; };
         float32 e[4];
     };
 
     FORCE_INLINE static quaternion identity() { quaternion result = {}; result.r = 1.0f; return result; }
+    FORCE_INLINE static quaternion rotate_x(float32 rx) { quaternion result = {}; result._1 = cosf(0.5f * rx); result._e23 = sinf(0.5f * rx); return result; }
+    FORCE_INLINE static quaternion rotate_y(float32 ry) { quaternion result = {}; result._1 = cosf(0.5f * ry); result._e31 = sinf(0.5f * ry); return result; }
+    FORCE_INLINE static quaternion rotate_z(float32 rz) { quaternion result = {}; result._1 = cosf(0.5f * rz); result._e12 = sinf(0.5f * rz); return result; }
+    FORCE_INLINE static quaternion rotate(float32 a, vector3 axis)
+    {
+        quaternion result = {};
+        result._1 = cosf(0.5f * a);
+        result.axis = sinf(0.5f * a) * axis;
+        return result;
+    }
 };
 
 FORCE_INLINE quaternion & operator += (quaternion & a, quaternion b) { a._1 += b._1; a._e12 += b._e12; a._e23 += b._e23; a._e31 += b._e31; return a; }
@@ -50,6 +61,12 @@ FORCE_INLINE quaternion operator * (quaternion a, quaternion b)
     r._e23 = a._1*b._e23 + a._e12*b._e31 + a._e23*b._1   - a._e31*b._e12;
     r._e31 = a._1*b._e31 - a._e12*b._e23 + a._e23*b._e12 + a._e31*b._1;
     return r;
+}
+
+FORCE_INLINE quaternion operator *= (quaternion & a, quaternion b)
+{
+    a = a * b;
+    return a;
 }
 
 FORCE_INLINE void       conjugate    (quaternion & q) { q._e12 = -q._e12; q._e23 = -q._e23; q._e31 = -q._e31; }
