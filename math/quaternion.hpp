@@ -50,6 +50,7 @@ struct quaternion
         result.axis = sinf(0.5f * a) * axis;
         return result;
     }
+    FORCE_INLINE static quaternion pure(vector3 v) { quaternion result = {}; result.axis = v; return result; }
 };
 
 FORCE_INLINE quaternion & operator += (quaternion & a, quaternion b) { a._1 += b._1; a._e21 += b._e21; a._e32 += b._e32; a._e13 += b._e13; return a; }
