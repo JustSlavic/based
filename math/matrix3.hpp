@@ -3,6 +3,7 @@
 
 #include "base.h"
 #include "vector3.hpp"
+#include "quaternion.hpp"
 
 
 struct matrix3

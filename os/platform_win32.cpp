@@ -5,6 +5,13 @@ namespace platform
 {
 
 
+struct window
+{
+    HWND Handle;
+    HDC DeviceContext;
+};
+
+
 memory_buffer allocate_pages(void *base, usize size)
 {
     memory_buffer result = {};
@@ -29,7 +36,19 @@ int deallocate_pages(memory_buffer buffer)
     return 0;
 }
 
-timepoint wall_clock::now()
+int32 get_monitor_refresh_rate_hz(window *window)
+{
+    int32 result = GetDeviceCaps(window->DeviceContext, VREFRESH);
+    return result;
+}
+
+void get_monitor_resolution(window *window, int32 *width, int32 *height)
+{
+    if (width) *width = GetDeviceCaps(window->DeviceContext, HORZRES);
+    if (height) *height = GetDeviceCaps(window->DeviceContext, VERTRES);
+}
+
+timepoint clock::now()
 {
     LARGE_INTEGER PerformanceCounter;
     QueryPerformanceCounter(&PerformanceCounter);
@@ -37,7 +56,7 @@ timepoint wall_clock::now()
     return result;
 }
 
-int64 wall_clock::frequency()
+int64 clock::frequency()
 {
     PERSIST int64 cache;
     if (cache == 0)
