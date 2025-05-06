@@ -37,6 +37,7 @@ struct matrix3
     }
 
     FORCE_INLINE static matrix3 identity() { matrix3 m = {}; m._11 = m._22 = m._33 = 1.f; return m; }
+    FORCE_INLINE static matrix3 zero() { matrix3 m = {}; return m; }
 };
 
 FORCE_INLINE float32 *get_data(matrix3 & a) { return &a._11; }
@@ -151,17 +152,19 @@ FORCE_INLINE matrix3 adjoint(matrix3 const & m)
     return result;
 }
 
-FORCE_INLINE matrix3 inverse(matrix3 const & m)
+FORCE_INLINE void inverse(matrix3 & m)
 {
-    matrix3 result = {};
-
     float32 det = determinant(m);
     if (!near_zero(det))
     {
-        result = (1.0f / det) * adjoint(m);
+        m = (1.0f / det) * adjoint(m);
     }
+}
 
-    return result;
+FORCE_INLINE matrix3 inversed(matrix3 m)
+{
+    inverse(m);
+    return m;
 }
 
 

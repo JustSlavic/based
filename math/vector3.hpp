@@ -23,6 +23,8 @@ struct vector3
         ASSERT(index < 3);
         return e[index];
     }
+
+    static vector3 zero() { vector3 result = {}; return result; }
 };
 
 FORCE_INLINE vector3 make_vector3(float32 x, float32 y, float32 z)
