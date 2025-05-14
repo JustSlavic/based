@@ -32,18 +32,17 @@ bool32 finite(float32 x)
 
 float32 absolute(float32 x)
 {
-    union { float32 f; uint32 u; } pun;
-    pun.f = x;
-    pun.u = (pun.u & 0x7fffffff);
-    return pun.f;
+    float32 result = (x < 0.f) ? -x : x;
+    return result;
 }
 
 float32 sign(float32 x)
 {
-    union { float32 f; uint32 u; } pun;
-    pun.f = x;
-    pun.u = (pun.u & 0x80000000) | 0x3f800000;
-    return pun.f;
+    float32 result = (x > 0.f)  ?  1.f :
+                     (x < 0.f)  ? -1.f :
+                     (x == 0.f) ?  0.f :
+                      x;
+    return result;
 }
 
 float32 square(float32 x)
