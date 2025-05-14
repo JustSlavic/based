@@ -36,6 +36,15 @@ int deallocate_pages(memory_buffer buffer)
     return 0;
 }
 
+void get_mouse_pos(window *w, int32 *x, int32 *y)
+{
+    POINT pos;
+    GetCursorPos(&pos);
+    ScreenToClient(w->Handle, &pos);
+    *x = pos.x;
+    *y = pos.y;
+}
+
 int32 get_monitor_refresh_rate_hz(window *window)
 {
     int32 result = GetDeviceCaps(window->DeviceContext, VREFRESH);
