@@ -16,9 +16,9 @@ struct window;
 [[nodiscard]] memory_buffer allocate_pages(usize size);
 int deallocate_pages(memory_buffer);
 
-[[nodiscard]] void get_mouse_pos(window *window, int32 *x, int32 *y);
+void get_mouse_pos(window *window, int32 *x, int32 *y);
 [[nodiscard]] int32 get_monitor_refresh_rate_hz(window *window);
-[[nodiscard]] void get_monitor_resolution(window *window, int32 *width, int32 *height);
+void get_monitor_resolution(window *window, int32 *width, int32 *height);
 
 namespace clock
 {

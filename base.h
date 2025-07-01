@@ -241,5 +241,8 @@ typedef uint32               bool32;
 #define HLSL(...) #__VA_ARGS__
 #define WGSL(...) #__VA_ARGS__
 
+#define min(A, B) ((A) < (B) ? (A) : (B))
+#define max(A, B) ((B) < (A) ? (A) : (B))
+
 
 #endif // BASED__BASE_HPP

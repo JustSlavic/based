@@ -34,7 +34,7 @@ int deallocate_pages(memory_buffer buffer)
     return ec;
 }
 
-int64 wall_clock::frequency()
+int64 clock::frequency()
 {
     PERSIST int64 cache;
     if (cache == 0)
@@ -57,7 +57,7 @@ int64 wall_clock::frequency()
     return cache;
 }
 
-timepoint wall_clock::now()
+timepoint clock::now()
 {
     timepoint result = {};
 
