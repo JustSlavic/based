@@ -100,7 +100,7 @@ memory_buffer load_file(char const *filename, memory_allocator *a)
         int ec = fstat(fd, &st);
         if (ec >= 0)
         {
-            result = a->allocate_buffer(st.st_size);
+            result = ALLOCATE_BUFFER(*a, st.st_size);
             if (result)
             {
                 uint32 bytes_read = read(fd, result.data, st.st_size);

@@ -55,7 +55,7 @@ string_id string_id::from(storage *sg, char const *buffer, usize size)
     {
         if (sg->strings[index].data == NULL)
         {
-            auto string_buffer = sg->allocator.allocate_buffer(size + 1);
+            auto string_buffer = ALLOCATE_BUFFER(sg->allocator, size + 1);
             memcpy(string_buffer.data, buffer, size);
 
             sg->strings[index] = string_view::from(string_buffer.data, string_buffer.size);

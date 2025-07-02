@@ -16,9 +16,15 @@ struct memory_arena
     memory_allocator *parent;
     usize size;
     usize used;
+
+    bool32 print_debug;
 };
 
+#if DEBUG
+memory_buffer memory_arena__allocate_(memory_arena *a, usize size, usize alignment, code_location cl)
+#else
 memory_buffer memory_arena__allocate_(memory_arena *a, usize size, usize alignment)
+#endif
 {
     memory_buffer result = {};
 
@@ -32,6 +38,10 @@ memory_buffer memory_arena__allocate_(memory_arena *a, usize size, usize alignme
 
         a->used += (size + padding);
     }
+
+    if (a->print_debug)
+        printf("allocated %10llu bytes at 0x%p at %s:%d (%s)\n", result.size, result.data,
+            cl.filename, cl.line, cl.function);
 
     return result;
 }
@@ -94,7 +104,11 @@ memory_allocator memory_allocator::allocate_arena(usize size)
 {
     memory_allocator result = {};
 
+#if DEBUG
+    auto memory = allocate_buffer_(size, alignof(memory_allocator), CL_HERE);
+#else
     auto memory = allocate_buffer_(size, alignof(memory_allocator));
+#endif
     if (memory.data)
     {
         result = make_arena(memory, this);
@@ -102,14 +116,22 @@ memory_allocator memory_allocator::allocate_arena(usize size)
     return result;
 }
 
+#if DEBUG
+memory_buffer memory_allocator::allocate_buffer_(usize size, usize alignment, code_location cl)
+#else
 memory_buffer memory_allocator::allocate_buffer_(usize size, usize alignment)
+#endif
 {
     memory_buffer result = {};
     switch (kind)
     {
         case ARENA:
         {
+#if DEBUG
+            result = memory_arena__allocate_((memory_arena *) opaque, size, alignment, cl);
+#else
             result = memory_arena__allocate_((memory_arena *) opaque, size, alignment);
+#endif
         }
         break;
 
@@ -125,29 +147,55 @@ memory_buffer memory_allocator::allocate_buffer_(usize size, usize alignment)
     return result;
 }
 
+#if DEBUG
+memory_buffer memory_allocator::allocate_buffer_(usize size, code_location cl)
+{
+    memory_buffer result = allocate_buffer_(size, 8, cl);
+    return result;
+}
+#else
 memory_buffer memory_allocator::allocate_buffer_(usize size)
 {
     memory_buffer result = allocate_buffer_(size, 8);
     return result;
 }
+#endif
 
+#if DEBUG
+memory_buffer memory_allocator::allocate_buffer(usize size, usize alignment, code_location cl)
+{
+    memory_buffer result = allocate_buffer_(size, alignment, cl);
+    memset(result.data, 0, result.size);
+    return result;
+}
+#else
 memory_buffer memory_allocator::allocate_buffer(usize size, usize alignment)
 {
     memory_buffer result = allocate_buffer_(size, alignment);
     memset(result.data, 0, result.size);
     return result;
 }
+#endif
 
+#if DEBUG
+memory_buffer memory_allocator::allocate_buffer(usize size, code_location cl)
+{
+    memory_buffer result = allocate_buffer_(size, 8, cl);
+    memset(result.data, 0, result.size);
+    return result;
+}
+#else
 memory_buffer memory_allocator::allocate_buffer(usize size)
 {
     memory_buffer result = allocate_buffer_(size, 8);
     memset(result.data, 0, result.size);
     return result;
 }
+#endif
 
 memory_buffer memory_allocator::allocate_copy(void *pointer, usize size)
 {
-    memory_buffer result = allocate_buffer_(size);
+    memory_buffer result = allocate_buffer_(size, CL_HERE);
     memcpy(result.data, pointer, size);
     return result;
 }
@@ -194,6 +242,23 @@ void memory_allocator::reset()
 
         default:
             ASSERT_FAIL("memory_allocator::reset() - unknown kind of allocator");
+    }
+}
+
+void memory_allocator::print_debug()
+{
+    if (kind == ARENA)
+    {
+        auto *arena = (memory_arena *) opaque;
+        arena->print_debug = true;
+    }
+}
+void memory_allocator::silence_debug()
+{
+    if (kind == ARENA)
+    {
+        auto *arena = (memory_arena *) opaque;
+        arena->print_debug = false;
     }
 }
 
