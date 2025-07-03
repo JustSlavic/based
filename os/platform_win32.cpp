@@ -109,7 +109,7 @@ memory_buffer load_file(char const *filename, memory_allocator *a)
         BOOL GetSizeResult = GetFileSizeEx(FileHandle, &FileSize);
         if (GetSizeResult == TRUE)
         {
-            Result = a->allocate_buffer(FileSize.QuadPart);
+            Result = ALLOCATE_BUFFER(*a, FileSize.QuadPart);
             if (Result)
             {
                 DWORD BytesRead;
