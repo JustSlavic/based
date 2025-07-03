@@ -38,6 +38,8 @@ FORCE_INLINE float4 q_mul(float4 a, float4 b)
 //     // r._e13 = a._1*b._e13 + a._e21*b._e32 - a._e32*b._e21 + a._e13*b._1;
 //     // r._e21 = a._1*b._e21 + a._e21*b._1   + a._e32*b._e13 - a._e13*b._e32;
 //     // return r;
+    float4 result = {};
+    return result;
 }
 
 
