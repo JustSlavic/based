@@ -76,6 +76,7 @@ FORCE_INLINE void    normalize    (vector3 & a) { float32 n = norm(a); if (n > 0
 FORCE_INLINE vector3 normalized   (vector3 a) { normalize(a); return a; }
 FORCE_INLINE vector3 cross        (vector3 a, vector3 b) { vector3 result; result.x = a.y * b.z - a.z * b.y; result.y = a.z * b.x - a.x * b.z; result.z = a.x * b.y - a.y * b.x; return result; }
 FORCE_INLINE vector3 bisector     (vector3 a, vector3 b) { vector3 result = norm(b)*a + norm(a)*b; return result; }
+FORCE_INLINE vector3 lerp         (vector3 a, vector3 b, float32 t) { vector3 result = (1.f - t) * a + t * b; return result; }
 
 
 #endif // BASED__VECTOR3_HPP
