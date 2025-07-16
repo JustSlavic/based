@@ -25,10 +25,12 @@ void print(char const *fmt, ...) {
 #elif OS_MAC || OS_LINUX
 void print(char const *fmt, ...)
 {
+    char buffer[1024] = {};
     va_list args;
     va_start(args, fmt);
-    vprintf(fmt, args);
+    vsnprintf(buffer, 1023, fmt, args);
     va_end(args);
+    printf("%s", buffer);
 }
 #endif
 
